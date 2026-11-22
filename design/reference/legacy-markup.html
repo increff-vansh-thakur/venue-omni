@@ -1,0 +1,169 @@
+<!-- OWNER VIEW -->
+<nav class="otabs" id="ownerTabs" role="tablist" aria-label="Owner sections">
+  <button data-o="bookings" class="active"><svg class="i" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v17H4V4h3zm11 7H6v10h12zM8 11h3v3H8z"/></svg>Bookings</button>
+  <button data-o="growth"><svg class="i" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3.3 3.1-6 7-6s7 2.7 7 6v1H2zm15.5-6c2.8.3 4.5 2.4 4.5 5v2h-4v-1c0-2.4-.9-4.5-2.5-6z"/></svg>Customers &amp; Growth</button>
+</nav>
+<div id="bookingsTab">
+<section class="kpis">
+  <div class="kpi"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3v17H4V4h3zm11 7H6v10h12z"/></svg>Bookings</div><div class="v num" id="kBookings">0</div><div class="s" id="kSplit">—</div></div>
+  <div class="kpi"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h16v2H2V4h2zm3-3V11h3v6zm5 0V7h3v10zm5 0v-4h3v4z"/></svg>Occupancy</div><div class="v num" id="kOcc">0%</div><div class="s">of 34 slots · 2 days</div></div>
+  <div class="kpi good"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M6 3h12v2h-3.3c.6.6 1 1.3 1.2 2H18v2h-2.1a5 5 0 0 1-4.9 4h-.6l6 7h-2.7l-6-7V11h3.3a3 3 0 0 0 2.8-2H6V7h8.8A3 3 0 0 0 12 5H6z"/></svg>Net Revenue to Venue</div><div class="v num" id="kNet">₹0</div><div class="s" id="kPaid">₹0 commission paid</div></div>
+  <div class="kpi good"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>Commission Saved</div><div class="v num" id="kSaved">₹0</div><div class="s">WhatsApp + Offline vs cheapest app</div></div>
+  <div class="kpi blue"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M3 20.5V14l9-2-9-2V3.5L22 12z"/></svg>Marketplace Postings</div><div class="v num" id="kPost">0</div><div class="s" id="kAck">—</div></div>
+  <div class="kpi bad"><div class="l"><svg class="i" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5z"/></svg>Double Bookings Blocked</div><div class="v num" id="kConf">0</div><div class="s" id="kMcp">0 MCP tool calls</div></div>
+</section>
+
+<main>
+  <div class="col">
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M11 2v10h10A10 10 0 0 0 11 2zM9 4.1A10 10 0 1 0 19.9 15H9z"/></svg>Channel Split<span class="aside" id="splitAside">—</span></h3>
+      <div class="sbar" id="sbar"></div>
+      <div class="srows" id="srows"></div>
+    </section>
+    <section class="card">
+      <div class="toolbar">
+        <div class="segmented" id="leftTabs"><button data-t="upcoming" class="active">Upcoming</button><button data-t="slots">All Slots</button></div>
+        <div class="segmented" id="days" hidden><button data-day="today">Today</button><button data-day="tomorrow">Tomorrow</button></div>
+        <span style="flex:1"></span>
+        <button id="aggBtn" title="Simulate an inbound marketplace booking"><svg class="i" viewBox="0 0 24 24"><path d="M4 4h16v4H4zM4 10h7v10H4zM13 10h7v4h-7zM13 16h7v4h-7z"/></svg>Marketplace Booking</button>
+        <button id="offBtn" class="gray"><svg class="i" viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5 0 9 2.5 9 5.5V22H3v-2.5C3 16.5 7 14 12 14z"/></svg>Offline Booking</button>
+        <button id="optBtn" class="primary"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Optimise</button>
+      </div>
+      <div id="upWrap">
+        <div class="uphead"><span>Time</span><span>Customer · channel</span><span>Blocked on other marketplaces</span><span>Status</span></div>
+        <div class="uplist" id="uplist"></div>
+      </div>
+      <div id="slotsWrap" hidden>
+        <div class="legend">
+          <span><i class="dot" style="background:#25D366"></i>WhatsApp</span>
+          <span id="mkLegend"></span>
+          <span><i class="dot" style="background:var(--gray)"></i>Offline / walk-in</span>
+          <span><i class="dot" style="background:var(--orange)"></i>Payment hold</span>
+          <span><i class="dot" style="background:var(--red)"></i>Blocked on marketplace</span>
+        </div>
+        <table id="grid"></table>
+        <div class="foot">Marketplace columns: tap to simulate an inbound booking · Offline: tap to add a walk-in, phone booking or owner block · WhatsApp: tap to ask for that slot in the chat · Tap your own booking to cancel · Tap a sold slot on another channel to test a double booking</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--wa)"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>
+      WhatsApp Booking<span class="aside" id="chatPicker"></span></h3>
+    <div class="phone">
+      <div class="wa-head">
+        <div class="avatar">KA</div>
+        <div><b>Kickoff Arena ✓</b><small id="waSub">Business account · replies instantly</small></div>
+      </div>
+      <div class="wa-body" id="waBody"></div>
+      <form class="wa-comp" id="waForm">
+        <input id="waInput" autocomplete="off" placeholder="Message">
+        <button type="submit" aria-label="Send"><svg class="i" viewBox="0 0 24 24"><path d="M3 20.5V14l9-2-9-2V3.5L22 12z"/></svg></button>
+      </form>
+    </div>
+    <div class="sugg" id="waSugg"></div>
+    <div class="note">The bot books only through MCP tools on this server: <code>check_availability</code> → <code>hold_slot</code> → <code>confirm_booking</code></div>
+  </section>
+
+  <div class="col side">
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M6 3a3 3 0 0 1 1 5.83V11h4a3 3 0 0 0 3-3v-.17a3 3 0 1 1 2 0V8a5 5 0 0 1-5 5H7v2.17a3 3 0 1 1-2 0V8.83A3 3 0 0 1 6 3z"/></svg>Channel Router
+        <span class="aside"><span class="segmented" id="feedTabs"><button data-f="postings" class="active">Postings</button><button data-f="activity">Activity</button></span></span></h3>
+      <div class="feed" id="feed"></div>
+    </section>
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>Owner Command</h3>
+      <textarea id="cmd" placeholder="Hindi, Hinglish or English — e.g. kal shaam 7 se 9 Hurdle pe band karo"></textarea>
+      <div class="sugg" id="examples"></div>
+      <div class="row">
+        <button id="runBtn" class="primary">Run</button>
+        <button id="micBtn"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0h-2a5 5 0 0 1-10 0zM11 18h2v4h-2z"/></svg>Speak</button>
+        <label class="switch"><input type="checkbox" id="speak" checked> Spoken reply</label>
+      </div>
+      <div class="reply" id="reply"></div>
+    </section>
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--purple)"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>AI Pricing Decisions</h3>
+      <div class="reasons" id="reasons"><div class="mut">Tap Optimise to reprice free slots per channel. Marketplace price changes are posted automatically.</div></div>
+    </section>
+  </div>
+</main>
+</div>
+<div id="growthTab" hidden></div>
+<!-- STAFF VIEW -->
+  <section class="stats">
+    <div class="kpi blue"><div class="l">Next arrival</div><div class="v sm" id="sNext">—</div><div class="s" id="sNextSub">—</div></div>
+    <div class="kpi"><div class="l">Today's bookings</div><div class="v num" id="sToday">0</div><div class="s" id="sTodaySub">—</div></div>
+    <div class="kpi good"><div class="l">Checked in</div><div class="v num" id="sIn">0</div><div class="s" id="sInSub">—</div></div>
+    <div class="kpi warn"><div class="l">WhatsApp queries to answer</div><div class="v num" id="sQ">0</div><div class="s" id="sQSub">—</div></div>
+  </section>
+  <main class="smain">
+    <section class="card cal-card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--red)"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zM5 9v11h14V9z"/></svg>Bookings Calendar
+        <span class="aside">Tap a booking for details · tap a free slot to add a walk-in</span></h3>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--wa)"></i>WhatsApp</span>
+        <span><i class="dot" style="background:var(--blue)"></i>App (aggregator)</span>
+        <span><i class="dot" style="background:var(--gray)"></i>Walk-in / phone</span>
+        <span><i class="dot" style="background:var(--green)"></i>Checked in</span>
+        <span><i class="dot" style="background:var(--orange)"></i>Payment pending</span>
+      </div>
+      <div class="cal" id="cal"></div>
+    </section>
+
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5 0 9 2.5 9 5.5V22H3v-2.5C3 16.5 7 14 12 14z"/></svg>Front Desk</h3>
+      <div class="quick">
+        <button class="primary" id="qWalk">+ Walk-in</button>
+        <button id="qPhone">+ Phone booking</button>
+      </div>
+      <div class="sub">Arriving next · today</div>
+      <div class="list" id="upNext"></div>
+      <div class="sub">On the turf now</div>
+      <div class="list" id="onTurf"></div>
+      <div class="sub">Free today · tap to book</div>
+      <div class="chips" id="freeToday"></div>
+    </section>
+
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--wa)"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp Queries
+        <span class="aside" id="inboxAside"></span></h3>
+      <div class="segmented" id="inboxTabs" style="margin-bottom:8px"><button data-t="need" class="active">Needs reply</button><button data-t="all">All chats</button></div>
+      <div class="inbox" id="inbox"></div>
+      <div id="threadWrap">
+        <div class="thead" id="thead"></div>
+        <div class="thread" id="thread"></div>
+        <div class="canned" id="canned"></div>
+        <form class="reply-bar" id="replyForm">
+          <input id="replyInput" autocomplete="off" placeholder="Reply as front desk…">
+          <button type="submit" class="primary">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+<!-- DIALOGS -->
+<dialog id="bkSheet">
+  <div class="sheet-h"><b id="bkTitle">Booking</b><button type="button" class="plain" id="bkClose">Done</button></div>
+  <div class="sheet-b" id="bkBody"></div>
+</dialog>
+
+<dialog id="offSheet">
+  <form id="offForm">
+    <div class="sheet-h"><button type="button" class="plain" id="offCancel">Cancel</button><b>Offline Booking</b><button type="submit" class="plain" id="offSave">Add</button></div>
+    <div class="sheet-b">
+      <div class="segmented" id="offKind" style="display:flex">
+        <button type="button" data-k="walkin" class="active" style="flex:1">Walk-in</button>
+        <button type="button" data-k="phone" style="flex:1">Phone Call</button>
+        <button type="button" data-k="owner" style="flex:1" class="owner-only">Owner Block</button>
+      </div>
+      <div class="two">
+        <div class="field"><label>Day</label><select id="offDay"><option value="today">Today</option><option value="tomorrow">Tomorrow</option></select></div>
+        <div class="field"><label>Slot</label><select id="offHour"></select></div>
+      </div>
+      <div class="field" id="fName"><label>Customer name</label><input id="offName" placeholder="e.g. Arjun"></div>
+      <div class="field" id="fPhone"><label>Phone</label><input id="offPhone" placeholder="+91 98xxx xxxxx" inputmode="tel"></div>
+      <div class="field" id="fNote" style="display:none"><label>Reason</label><select id="offNote"><option>Maintenance</option><option>Coaching session</option><option>Private tournament</option><option>Regulars (owner hold)</option></select></div>
+      <div class="note" id="offPrice"></div>
+    </div>
+  </form>
+</dialog>

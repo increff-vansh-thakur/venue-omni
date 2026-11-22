@@ -452,13 +452,22 @@ function broadcast() {
 // ───────────────────────────── HTTP ─────────────────────────────
 const readBody = req => new Promise((res, rej) => { const ch = []; req.on('data', c => ch.push(c)); req.on('end', () => res(Buffer.concat(ch))); req.on('error', rej); });
 const send = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
-const STATIC = { '/': ['index.html', 'text/html; charset=utf-8'], '/index.html': ['index.html', 'text/html; charset=utf-8'], '/engine.js': ['engine.js', 'text/javascript'],
-  '/growth-ui.js': ['growth-ui.js', 'text/javascript'], '/growth.css': ['growth.css', 'text/css'] };
+// Static files: everything under public/ (plus engine.js, shared with the server). Path-checked so nothing outside public/ is served.
+const PUBLIC = path.join(__dirname, 'public');
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
+function staticFile(url) {
+  if (url === '/engine.js') return path.join(__dirname, 'engine.js');
+  const rel = url === '/' ? 'index.html' : decodeURIComponent(url).replace(/^\/+/, '');
+  const p = path.normalize(path.join(PUBLIC, rel));
+  if (!p.startsWith(PUBLIC + path.sep) || !MIME[path.extname(p)]) return null;
+  try { return fs.statSync(p).isFile() ? p : null; } catch { return null; }
+}
 
 http.createServer(async (req, res) => {
   try {
     const url = req.url.split('?')[0];
-    if (req.method === 'GET' && STATIC[url]) { res.writeHead(200, { 'Content-Type': STATIC[url][1] }); return fs.createReadStream(path.join(__dirname, STATIC[url][0])).pipe(res); }
+    const sf = req.method === 'GET' && staticFile(url);
+    if (sf) { res.writeHead(200, { 'Content-Type': MIME[path.extname(sf)], 'Cache-Control': sf.includes('/fonts/') ? 'public, max-age=31536000' : 'no-cache' }); return fs.createReadStream(sf).pipe(res); }
     if (url === '/api/health') return send(res, 200, { hasKey: !!KEY, chatModel: CHAT_MODEL, wa: S.wa });
     if (url === '/api/events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });

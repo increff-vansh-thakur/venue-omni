@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VenueBuddy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23C9EE5B'/><path d='M6 7l6 11 6-11' fill='none' stroke='%230F1312' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/owner.css">
+<link rel="stylesheet" href="/staff.css">
+<link rel="stylesheet" href="/growth.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7l6 11 6-11"/></svg></div>
+      <div><div class="brand-name">VenueBuddy</div><div class="brand-sub" id="subtitle">Kickoff Arena, Koramangala · 5-a-side</div></div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Sections"></nav>
+    <div class="status">
+      <span id="waBadge" class="badge">WhatsApp: Simulated</span>
+      <span id="aiBadge" class="badge owner-only">Connecting</span>
+    </div>
+    <div class="role" id="roleSw" role="tablist" aria-label="View as"><button data-role="owner">Owner</button><button data-role="staff">Front desk</button></div>
+    <button id="resetBtn" class="btn quiet sm owner-only" title="Reset demo data (R)">Reset</button>
+  </header>
+
+  <main id="ownerView"></main>
+  <main id="staffView" hidden></main>
+</div>
+<div id="dialogs"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/engine.js"></script>
+<script src="/core.js"></script>
+<script src="/owner.js"></script>
+<script src="/sheets.js"></script>
+<script src="/staff.js"></script>
+<script src="/growth-ui.js"></script>
+<script src="/boot.js"></script>
+</body>
+</html>

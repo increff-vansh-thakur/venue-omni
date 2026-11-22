@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TurfOS · Design options</title>
+<!-- Preview only: fonts load from Google Fonts here. The real build self-hosts them (no CDN on stage). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Instrument+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Themes ─────────────────────────────────────────── */
+:root, [data-theme=T1] { --bg:#F6F4EE; --surface:#FFFFFF; --ink:#17191A; --muted:#6B6F6C; --rule:#E3E0D8; --accent:#1F6F4A; --accent-ink:#FFFFFF; --alert:#B8462B; --hold:#A86B12; --soft:#EFECE4;
+  --display:'Fraunces',Georgia,'Noto Sans Devanagari',serif; --ui:'Manrope','Noto Sans Devanagari',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace; --shadow:0 1px 2px rgba(23,25,26,.06); }
+[data-theme=T2] { --bg:#0F1312; --surface:#161C1A; --ink:#E8ECE9; --muted:#8D9893; --rule:#24302C; --accent:#C9EE5B; --accent-ink:#0F1312; --alert:#F0745A; --hold:#E6B54A; --soft:#1C2421;
+  --display:'Space Grotesk','Noto Sans Devanagari',sans-serif; --ui:'IBM Plex Sans','Noto Sans Devanagari',system-ui,sans-serif; --shadow:none; }
+[data-theme=T3] { --bg:#FFFFFF; --surface:#FAFAF9; --ink:#0E1116; --muted:#5E6470; --rule:#E7E7E4; --accent:#0F766E; --accent-ink:#FFFFFF; --alert:#B42318; --hold:#B54708; --soft:#F3F3F1;
+  --display:'Instrument Serif',Georgia,serif; --ui:'Instrument Sans','Noto Sans Devanagari',system-ui,sans-serif; --shadow:none; }
+/* Channel marks: muted, small use only */
+:root { --c-whatsapp:#3F7D5A; --c-aggA:#4A6FA5; --c-aggB:#A0703A; --c-aggC:#7A6A8F; --c-offline:#7C807D; }
+[data-theme=T2] { --c-whatsapp:#6FB58C; --c-aggA:#7C9CCB; --c-aggB:#C99A62; --c-aggC:#A898BE; --c-offline:#9AA39F; }
+
+* { box-sizing:border-box; margin:0; }
+body { background:var(--bg); color:var(--ink); font:15px/1.45 var(--ui); -webkit-font-smoothing:antialiased; }
+button { font:inherit; color:inherit; cursor:pointer; }
+
+/* ── Picker bar (not part of the design) ─────────────── */
+.picker { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; gap:18px; align-items:center; padding:10px 20px; background:#202322; color:#F2F2F0; font:13px/1.2 system-ui,sans-serif; }
+.picker b { font-weight:600; margin-right:6px; opacity:.7; }
+.picker .grp { display:flex; align-items:center; gap:4px; }
+.picker button { background:transparent; border:1px solid #4A4E4C; color:#F2F2F0; padding:5px 10px; border-radius:6px; font-size:13px; }
+.picker button.on { background:#F2F2F0; color:#202322; border-color:#F2F2F0; }
+.picker .desc { flex-basis:100%; opacity:.75; font-size:12.5px; }
+
+/* ── App chrome ──────────────────────────────────────── */
+.app { max-width:1320px; margin:0 auto; padding:20px 28px 48px; }
+.top { display:flex; align-items:center; gap:24px; padding-bottom:18px; border-bottom:1px solid var(--rule); }
+.brand { font:600 20px/1 var(--display); letter-spacing:-.01em; }
+.venue { color:var(--muted); font-size:13.5px; }
+.nav { display:flex; gap:2px; margin-left:auto; }
+.nav a { padding:7px 12px; border-radius:6px; color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; }
+.nav a.on { color:var(--ink); background:var(--soft); }
+.who { display:flex; border:1px solid var(--rule); border-radius:8px; padding:2px; }
+.who span { padding:5px 10px; font-size:13px; border-radius:6px; color:var(--muted); }
+.who span.on { background:var(--ink); color:var(--bg); }
+.status { font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--accent); display:inline-block; }
+
+.grid { display:grid; grid-template-columns:repeat(12,1fr); gap:24px; margin-top:28px; }
+.card { background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:20px 22px; box-shadow:var(--shadow); }
+.label { font-size:12.5px; color:var(--muted); font-weight:500; letter-spacing:.01em; }
+.h2 { font-size:15px; font-weight:600; margin-bottom:12px; display:flex; align-items:baseline; gap:10px; }
+.h2 .label { font-weight:400; }
+.big { font:600 64px/1 var(--display); letter-spacing:-.02em; margin:10px 0 8px; }
+[data-theme=T3] .big { font-weight:400; font-size:76px; }
+.num { font:600 26px/1.1 var(--display); }
+[data-theme=T3] .num { font-weight:400; font-size:30px; }
+.sub { color:var(--muted); font-size:14px; }
+.btn { border:1px solid var(--rule); background:var(--surface); padding:9px 14px; border-radius:8px; font-weight:600; font-size:14px; }
+.btn.primary { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.btn.quiet { border-color:transparent; background:transparent; color:var(--muted); }
+.mark { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:7px; vertical-align:1px; }
+.chip { display:inline-flex; align-items:center; font-size:12.5px; padding:3px 9px; border-radius:99px; border:1px solid var(--rule); color:var(--muted); white-space:nowrap; }
+.chip.ok { color:var(--accent); border-color:currentColor; }
+[data-theme=T2] .chip.ok { color:var(--c-whatsapp); }
+.chip.warn { color:var(--hold); border-color:currentColor; }
+.chip.alert { color:var(--alert); border-color:currentColor; }
+.row { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--rule); }
+.row:first-of-type { border-top:0; }
+.row .t { width:62px; font-weight:600; font-variant-numeric:tabular-nums; }
+.row .grow { flex:1; min-width:0; }
+.row .m { color:var(--muted); font-size:13px; }
+.right { text-align:right; font-variant-numeric:tabular-nums; }
+.foot { margin-top:28px; color:var(--muted); font-size:12.5px; }
+
+/* Hour strip */
+.strip { display:grid; grid-template-columns:repeat(17,1fr); gap:4px; margin-top:22px; }
+.strip .h { height:44px; border-radius:6px; background:var(--soft); position:relative; }
+.strip .h.past { opacity:.45; }
+.strip .h.bk { background:var(--chc); }
+.strip .h.now { outline:2px solid var(--ink); outline-offset:1px; }
+.strip .h i { position:absolute; bottom:-20px; left:0; font-style:normal; font-size:11px; color:var(--muted); }
+.legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:34px; font-size:12.5px; color:var(--muted); }
+
+/* Split bar */
+.split { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; margin:12px 0 10px; }
+
+/* Board (O2) */
+table.board { width:100%; border-collapse:separate; border-spacing:4px; font-size:13px; }
+.board th { text-align:left; font-weight:500; color:var(--muted); font-size:12.5px; padding:0 8px 6px; }
+.board td { padding:7px 9px; border-radius:6px; background:var(--soft); color:var(--muted); font-variant-numeric:tabular-nums; height:34px; }
+.board td.hr { background:transparent; color:var(--ink); font-weight:600; width:70px; padding-left:0; }
+.board td.hr span { display:block; font-weight:400; color:var(--muted); font-size:11.5px; }
+.board td.bk { background:var(--surface); color:var(--ink); box-shadow:inset 3px 0 0 var(--chc); border:1px solid var(--rule); font-weight:600; }
+.board td.lock { background:transparent; border:1px dashed var(--rule); color:var(--muted); font-size:12px; }
+.board tr.past td:not(.hr) { opacity:.4; }
+.board tr.now td.hr { color:var(--accent); }
+[data-theme=T2] .board tr.now td.hr { color:var(--accent); }
+
+/* Command (O3) */
+.cmd { display:flex; gap:10px; align-items:stretch; }
+.cmd input { flex:1; font:500 20px/1.3 var(--ui); padding:18px 20px; border:1.5px solid var(--ink); border-radius:10px; background:var(--surface); color:var(--ink); }
+.cmd input::placeholder { color:var(--muted); font-weight:400; }
+.examples { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.examples .chip { font-size:13.5px; padding:6px 12px; color:var(--ink); background:var(--surface); }
+.feed p { padding:12px 0; border-top:1px solid var(--rule); }
+.feed p:first-child { border-top:0; }
+.feed time { color:var(--muted); font-size:13px; margin-right:10px; font-variant-numeric:tabular-nums; }
+
+/* Staff */
+.hero-arrival { display:flex; align-items:center; gap:28px; }
+.hero-arrival .when { font:600 52px/1 var(--display); }
+[data-theme=T3] .hero-arrival .when { font-weight:400; font-size:60px; }
+.hero-arrival .who2 { font-size:24px; font-weight:600; }
+.actions { display:flex; gap:10px; margin-left:auto; }
+.actions .btn { padding:14px 22px; font-size:15px; }
+.sheet .row { padding:0; min-height:58px; }
+.sheet .row .t { width:84px; color:var(--muted); font-weight:500; }
+.sheet .row.bk .t { color:var(--ink); font-weight:600; }
+.sheet .row.now { background:var(--soft); margin:0 -22px; padding:0 22px; }
+.sheet .row.past { opacity:.45; }
+.sheet .slotbody { flex:1; display:flex; align-items:center; gap:12px; padding:10px 0; }
+.sheet .bar { width:3px; align-self:stretch; border-radius:2px; background:var(--chc); }
+.addw { color:var(--accent); font-weight:600; font-size:14px; }
+[data-theme=T2] .addw { color:var(--accent); }
+.inbox .chat { display:flex; gap:12px; padding:14px; border-radius:10px; cursor:pointer; }
+.inbox .chat.on { background:var(--soft); }
+.avatar { width:36px; height:36px; border-radius:50%; background:var(--soft); display:grid; place-items:center; font-weight:600; font-size:14px; border:1px solid var(--rule); flex:none; }
+.msgs { display:flex; flex-direction:column; gap:10px; padding:8px 0 16px; }
+.msg { max-width:78%; padding:10px 14px; border-radius:12px; background:var(--soft); white-space:pre-line; font-size:14px; }
+.msg.out { align-self:flex-end; background:transparent; border:1px solid var(--rule); }
+.msg small { display:block; color:var(--muted); font-size:11.5px; margin-top:4px; }
+.reply { display:flex; gap:8px; margin-top:6px; }
+.reply input { flex:1; padding:11px 14px; border:1px solid var(--rule); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; }
+.badge { background:var(--alert); color:#fff; font-size:11.5px; font-weight:600; border-radius:99px; padding:1px 7px; margin-left:6px; }
+.toggle { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+.toggle i { width:30px; height:18px; border-radius:99px; background:var(--accent); position:relative; display:inline-block; }
+.toggle i::after { content:''; position:absolute; right:2px; top:2px; width:14px; height:14px; border-radius:50%; background:var(--accent-ink); }
+.note { margin:22px 0 0; padding:14px 16px; border:1px dashed var(--rule); border-radius:10px; color:var(--muted); font-size:13px; }
+@media (max-width:900px){ .grid > * { grid-column:1/-1 !important; } .nav { display:none; } .big { font-size:48px; } .hero-arrival { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<div class="picker" id="picker"></div>
+<div id="root"></div>
+
+<script>
+/* ── Demo data: the app's real seed state (server.js freshState) at a preview clock of 5 PM, Sunday 22 Nov ── */
+const NOW = 17;
+const CH = { whatsapp:{n:'WhatsApp',c:0}, aggA:{n:'Playon',c:.20}, aggB:{n:'Hurdle',c:.15}, aggC:{n:'Distinct',c:.18}, offline:{n:'Walk-in / phone',c:0} };
+const HOURS = Array.from({length:17},(_,i)=>i+6);
+const band = h => [6,7,18,19,20,21].includes(h) ? 'Peak' : (h>=10&&h<=15 ? 'Off-peak' : 'Shoulder');
+const price = (day,h) => Math.round(1000*({Peak:1.3,'Off-peak':.8,Shoulder:1}[band(h)])*(day==='today'?1.2:1)/10)*10;
+const BK = [
+  {day:'today',h:7, ch:'offline',who:'Rahul',  ref:'TB-1040',status:'Checked in', pay:'Paid at desk'},
+  {day:'today',h:19,ch:'aggA',   who:'Vikram', ref:'TB-1041',status:'Booked',     pay:'Paid in Playon'},
+  {day:'today',h:20,ch:'whatsapp',who:'Karan', ref:'TB-1042',status:'Booked',     pay:'Paid by UPI'},
+  {day:'tomorrow',h:20,ch:'aggB',who:'Sneha',  ref:'TB-1043',status:'Booked',     pay:'Paid in Hurdle'},
+  {day:'tomorrow',h:21,ch:'aggC',who:'Rohan',  ref:'TB-1044',status:'Booked',     pay:'Paid in Distinct'},
+].map(b=>({...b, price:price(b.day,b.h), kept:Math.round(price(b.day,b.h)*(1-CH[b.ch].c))}));
+const at = (d,h) => BK.find(b=>b.day===d&&b.h===h);
+const inr = n => '₹'+n.toLocaleString('en-IN');
+const t12 = h => (h%12||12)+(h<12?' AM':' PM');
+const mk = ch => `<span class="mark" style="background:var(--c-${ch})"></span>`;
+const today = BK.filter(b=>b.day==='today');
+const keptToday = today.reduce((s,b)=>s+b.kept,0), feesToday = today.reduce((s,b)=>s+b.price-b.kept,0);
+const freeLeft = HOURS.filter(h=>h>=NOW&&!at('today',h)).length;
+const upcoming = BK.filter(b=>b.day==='tomorrow'||b.h>=NOW);
+
+/* ── Shared chrome ── */
+const chrome = (role, navOn, body) => `
+<div class="app">
+  <div class="top">
+    <div><div class="brand">TurfOS</div><div class="venue">Kickoff Arena, Koramangala · 5-a-side</div></div>
+    <nav class="nav">${(role==='owner'?['Today','Slots','Pricing','Customers','Channel sync']:['Desk','Calendar','WhatsApp']).map(n=>`<a href="#" class="${n===navOn?'on':''}">${n}${n==='WhatsApp'?'<span class="badge">2</span>':''}</a>`).join('')}</nav>
+    <div class="status"><span class="dot"></span>All channels in sync</div>
+    <div class="who"><span class="${role==='owner'?'on':''}">Owner</span><span class="${role==='staff'?'on':''}">Front desk</span></div>
+  </div>
+  ${body}
+  <p class="foot">Demo data from the app's seed state · Sunday 22 Nov, 5 PM · Marketplace fees (Playon 20%, Hurdle 15%, Distinct 18%) are assumptions.</p>
+</div>`;
+
+const stripHTML = () => `<div class="strip">${HOURS.map(h=>{const b=at('today',h);return `<div class="h ${h<NOW?'past':''} ${b?'bk':''} ${h===NOW?'now':''}" style="${b?`--chc:var(--c-${b.ch})`:''}" title="${t12(h)}${b?' · '+b.who+' · '+CH[b.ch].n:' · free'}">${[6,9,12,15,18,21].includes(h)?`<i>${t12(h)}</i>`:''}</div>`}).join('')}</div>
+  <div class="legend">${Object.entries(CH).map(([k,v])=>`<span>${mk(k)}${v.n}</span>`).join('')}<span><span class="mark" style="background:var(--soft);border:1px solid var(--rule)"></span>Free</span></div>`;
+
+const nextList = (n=3) => upcoming.slice(0,n).map(b=>`<div class="row"><div class="t">${t12(b.h)}</div><div class="grow"><div>${b.who}</div><div class="m">${mk(b.ch)}${CH[b.ch].n}${b.day==='tomorrow'?' · Tomorrow':''}</div></div><div class="right">${inr(b.kept)}<div class="m">kept</div></div></div>`).join('');
+
+const splitBar = () => { const c={}; BK.forEach(b=>c[b.ch]=(c[b.ch]||0)+1);
+  return `<div class="split">${Object.keys(CH).map(k=>c[k]?`<span style="flex:${c[k]};background:var(--c-${k})"></span>`:'').join('')}</div>
+  ${Object.keys(CH).map(k=>`<div class="row" style="padding:7px 0"><div class="grow">${mk(k)}${CH[k].n}</div><div class="m">${c[k]||0} booking${c[k]===1?'':'s'}</div><div class="right" style="width:80px">${CH[k].c?Math.round(CH[k].c*100)+'% fee':'No fee'}</div></div>`).join('')}`; };
+
+/* ── Owner layouts ── */
+const OWNER = {
+  O1: { name:'Today at a glance', desc:'One big number: money kept today. One strip of today\'s hours. Everything else in tabs.',
+    html: () => chrome('owner','Today', `
+    <div class="grid">
+      <section class="card" style="grid-column:span 8;padding:28px 30px 44px">
+        <div class="label">Kept after fees today</div>
+        <div class="big">${inr(keptToday)}</div>
+        <div class="sub">${today.length} of 17 hours booked · ${inr(feesToday)} paid in app fees · ${freeLeft} hours left to sell tonight</div>
+        ${stripHTML()}
+      </section>
+      <section class="card" style="grid-column:span 4">
+        <div class="h2">Coming up</div>${nextList(4)}
+      </section>
+      <section class="card" style="grid-column:span 5">
+        <div class="h2">Where bookings came from <span class="label">Today and tomorrow</span></div>${splitBar()}
+      </section>
+      <section class="card" style="grid-column:span 7">
+        <div class="h2">Change something</div>
+        <div class="cmd"><input placeholder="kal shaam 7 se 9 Hurdle pe band karo"><button class="btn">Speak</button><button class="btn primary">Run</button></div>
+        <div class="examples"><span class="chip">aaj dopahar 12 se 4 WhatsApp pe 20% discount</span><span class="chip">Optimise prices for free slots</span></div>
+      </section>
+    </div>`) },
+
+  O2: { name:'Slot board', desc:'The day as a board of hours by channel. Empty slots stay quiet; booked slots stand out. Command box in a side rail.',
+    html: () => chrome('owner','Slots', `
+    <div style="display:flex;gap:28px;align-items:baseline;margin-top:22px;flex-wrap:wrap">
+      <div><span class="label">Kept today</span> <span class="num">${inr(keptToday)}</span></div>
+      <div><span class="label">Booked</span> <span class="num">${today.length}/17</span></div>
+      <div><span class="label">App fees</span> <span class="num">${inr(feesToday)}</span></div>
+      <div><span class="label">Clashes stopped</span> <span class="num">0</span></div>
+      <div style="margin-left:auto;display:flex;gap:8px"><button class="btn" style="background:var(--ink);color:var(--bg)">Today · Sun 22</button><button class="btn">Tomorrow · Mon 23</button></div>
+    </div>
+    <div class="grid" style="margin-top:18px">
+      <section class="card" style="grid-column:span 9;padding:14px 16px">
+        <table class="board"><tr><th></th>${Object.entries(CH).map(([k,v])=>`<th>${mk(k)}${v.n}<br><span style="font-weight:400">${v.c?Math.round(v.c*100)+'% fee':'No fee'}</span></th>`).join('')}</tr>
+        ${HOURS.map(h=>{const b=at('today',h),p=price('today',h);return `<tr class="${h<NOW?'past':''} ${h===NOW?'now':''}"><td class="hr">${t12(h)}<span>${band(h)}</span></td>${Object.keys(CH).map(k=> b? (b.ch===k?`<td class="bk" style="--chc:var(--c-${k})">${b.who} · ${inr(b.price)}</td>`:`<td class="lock">Taken</td>`) : `<td>${inr(p)}${CH[k].c?` <span style="opacity:.7">· keep ${inr(Math.round(p*(1-CH[k].c)))}</span>`:''}</td>`).join('')}</tr>`}).join('')}
+        </table>
+      </section>
+      <aside style="grid-column:span 3;display:flex;flex-direction:column;gap:20px">
+        <div class="card"><div class="h2">Tell TurfOS</div>
+          <div class="cmd"><input style="font-size:15px;padding:12px" placeholder="aaj raat 9 baje sab band karo"></div>
+          <div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Speak</button><button class="btn primary" style="flex:1">Run</button></div></div>
+        <div class="card"><div class="h2">Latest</div><div class="feed" style="font-size:13.5px">
+          <p><time>4:52 PM</time>Karan booked 8 PM on WhatsApp. Apps blocked.</p>
+          <p><time>4:10 PM</time>Vikram booked 7 PM on Playon.</p>
+          <p><time>7:02 AM</time>Rahul checked in at the desk.</p></div></div>
+      </aside>
+    </div>`) },
+
+  O3: { name:'Ask first', desc:'The command box is the hero. Below it, what changed in plain sentences, then a slim view of today.',
+    html: () => chrome('owner','Today', `
+    <div class="grid">
+      <section style="grid-column:2 / span 10;padding:24px 0 8px">
+        <div class="label" style="margin-bottom:10px">Tell TurfOS what to change. Hindi, Hinglish or English.</div>
+        <div class="cmd"><input placeholder="kal shaam 7 se 9 Hurdle pe band karo"><button class="btn" style="padding:0 20px">Speak</button><button class="btn primary" style="padding:0 26px">Run</button></div>
+        <div class="examples"><span class="chip">aaj dopahar 12 se 4 WhatsApp pe 20% discount do</span><span class="chip">आज रात 9 बजे सब चैनल पर बंद करो</span><span class="chip">Fill the empty afternoon slots</span></div>
+      </section>
+      <section class="card" style="grid-column:2 / span 6">
+        <div class="h2">What changed today</div><div class="feed">
+          <p><time>4:52 PM</time>Karan booked 8 PM on WhatsApp for ${inr(1560)}. Playon, Hurdle and Distinct were blocked for that hour.</p>
+          <p><time>4:10 PM</time>Vikram booked 7 PM through Playon. You keep ${inr(1248)} after the 20% fee.</p>
+          <p><time>7:02 AM</time>Rahul walked in for 7 AM and checked in.</p></div>
+      </section>
+      <section class="card" style="grid-column:span 4">
+        <div class="label">Kept after fees today</div><div class="num" style="margin:6px 0 4px">${inr(keptToday)}</div>
+        <div class="sub">${today.length} of 17 hours booked</div>
+        <div style="margin-top:14px">${nextList(2)}</div>
+      </section>
+      <section class="card" style="grid-column:2 / span 10;padding:18px 22px 38px"><div class="h2">Today</div>${stripHTML().replace('margin-top:34px','margin-top:28px')}</section>
+    </div>`) },
+};
+
+/* ── Staff layouts ── */
+const nextArr = today.find(b=>b.h>=NOW);
+const STAFF = {
+  S1: { name:'Next up', desc:'One big card for the next group to arrive, with Check in. The rest of today as a list. Walk-in button always in reach.',
+    html: () => chrome('staff','Desk', `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+      <div class="sub">Sunday 22 Nov · ${today.length} bookings today · 1 checked in</div>
+      <div style="display:flex;gap:10px"><button class="btn">+ Phone booking</button><button class="btn primary">+ Walk-in</button></div>
+    </div>
+    <div class="grid" style="margin-top:16px">
+      <section class="card" style="grid-column:span 12;padding:28px 30px">
+        <div class="label" style="margin-bottom:12px">Next arrival</div>
+        <div class="hero-arrival"><div class="when">${t12(nextArr.h)}</div>
+          <div><div class="who2">${nextArr.who}</div><div class="sub">${mk(nextArr.ch)}${CH[nextArr.ch].n} · ${nextArr.pay} · ${nextArr.ref}</div></div>
+          <div class="actions"><button class="btn">No-show</button><button class="btn primary">Check in</button></div></div>
+      </section>
+      <section class="card" style="grid-column:span 8"><div class="h2">Rest of today</div>
+        ${today.filter(b=>b!==nextArr).map(b=>`<div class="row"><div class="t">${t12(b.h)}</div><div class="grow">${b.who}<div class="m">${mk(b.ch)}${CH[b.ch].n} · ${b.pay}</div></div><span class="chip ${b.status==='Checked in'?'ok':''}">${b.status}</span></div>`).join('')}
+      </section>
+      <section class="card" style="grid-column:span 4"><div class="h2">Free tonight</div>
+        ${[17,18,21,22].map(h=>`<div class="row"><div class="t">${t12(h)}</div><div class="grow m">${inr(price('today',h))} at desk</div><span class="addw">Add</span></div>`).join('')}
+        <div class="note">2 WhatsApp chats need a reply. <a href="#" style="color:inherit;font-weight:600">Open</a></div>
+      </section>
+    </div>`) },
+
+  S2: { name:'Day sheet', desc:'Today as one tall sheet, an hour per row with large tap targets. The current hour is highlighted.',
+    html: () => chrome('staff','Calendar', `
+    <div class="grid">
+      <section class="card sheet" style="grid-column:span 8;padding-top:8px;padding-bottom:8px">
+        <div class="row past"><div class="t">6 AM to ${t12(NOW-1)}</div><div class="slotbody"><div class="grow m">Earlier today · ${today.filter(b=>b.h<NOW).map(b=>b.who+', '+b.status.toLowerCase()).join(' · ')||'no bookings'}</div><span class="addw" style="color:var(--muted)">Show</span></div></div>
+        ${HOURS.filter(h=>h>=NOW).map(h=>{const b=at('today',h);return `<div class="row ${b?'bk':''} ${h<NOW?'past':''} ${h===NOW?'now':''}"><div class="t">${t12(h)}</div>
+          ${b?`<div class="slotbody" style="--chc:var(--c-${b.ch})"><span class="bar"></span><div class="grow">${b.who}<div class="m">${CH[b.ch].n} · ${b.pay}</div></div><span class="chip ${b.status==='Checked in'?'ok':''}">${b.status}</span></div>`
+             :`<div class="slotbody"><div class="grow m">${h<NOW?'Past':'Free · '+inr(price('today',h))}</div>${h>=NOW?'<span class="addw">Add walk-in</span>':''}</div>`}</div>`}).join('')}
+      </section>
+      <aside style="grid-column:span 4;display:flex;flex-direction:column;gap:20px;position:sticky;top:70px;align-self:start">
+        <div class="card"><div class="label">Now</div><div class="num" style="margin:4px 0">${t12(NOW)} · Free</div><div class="sub">Next: ${nextArr.who} at ${t12(nextArr.h)}</div>
+          <button class="btn primary" style="width:100%;margin-top:14px;padding:12px">+ Walk-in for ${t12(NOW)}</button></div>
+        <div class="card"><div class="h2">WhatsApp <span class="badge">2</span></div><div class="m sub">Karan asked about extra bibs. Arjun asked about parking and shoes.</div></div>
+      </aside>
+    </div>`) },
+
+  S3: { name:'Desk and inbox', desc:'Split screen. WhatsApp questions on the left, today\'s bookings on the right. For desks where chat is the main job.',
+    html: () => chrome('staff','WhatsApp', `
+    <div class="grid">
+      <section class="card inbox" style="grid-column:span 3;padding:10px">
+        <div class="label" style="padding:8px 14px">Needs reply · 2</div>
+        <div class="chat on"><div class="avatar">K</div><div class="grow"><b>Karan</b><div class="m" style="font-size:13px">Hum 12 log aa rahe hain, extra bibs milenge?</div></div></div>
+        <div class="chat"><div class="avatar">A</div><div class="grow"><b>Arjun</b><div class="m" style="font-size:13px">Parking available hai? Aur shoes rent pe milte hain?</div></div></div>
+      </section>
+      <section class="card" style="grid-column:span 5;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--rule)"><b>Karan</b><span class="m sub" style="font-size:13px">Booked 8 PM today · TB-1042</span>
+          <span class="toggle" style="margin-left:auto">Bot <i></i></span><button class="btn quiet">Mark done</button></div>
+        <div class="msgs" style="flex:1">
+          <div class="msg">aaj raat 8 baje turf chahiye<small>3:52 PM</small></div>
+          <div class="msg out">Booking confirmed.\nRef TB-1042 · Today 8 to 9 PM<small>Bot · 3:52 PM</small></div>
+          <div class="msg">Hum 12 log aa rahe hain, extra bibs milenge?<small>4:37 PM</small></div>
+        </div>
+        <div class="examples" style="margin:0 0 8px"><span class="chip">Bibs aur ball desk pe free milenge</span><span class="chip">Haan, free parking hai</span></div>
+        <div class="reply"><input placeholder="Reply as front desk"><button class="btn primary">Send</button></div>
+      </section>
+      <section class="card" style="grid-column:span 4"><div class="h2">Today <button class="btn primary" style="margin-left:auto;padding:6px 12px;font-size:13px">+ Walk-in</button></div>
+        ${today.map(b=>`<div class="row"><div class="t">${t12(b.h)}</div><div class="grow">${b.who}<div class="m">${mk(b.ch)}${CH[b.ch].n}</div></div>${b.status==='Checked in'?'<span class="chip ok">Checked in</span>':'<button class="btn" style="padding:6px 10px;font-size:13px">Check in</button>'}</div>`).join('')}
+      </section>
+    </div>`) },
+};
+
+/* ── Picker ── */
+const THEMES = { T1:'Clubhouse · light, warm', T2:'Floodlight · dark, calm', T3:'Ledger · white, minimal' };
+const st = Object.assign({ view:'owner', theme:'T1', O:'O1', S:'S1' }, JSON.parse(localStorage.getItem('turfos.design')||'{}'));
+function render(){
+  localStorage.setItem('turfos.design', JSON.stringify(st));
+  document.documentElement.dataset.theme = st.theme;
+  const L = st.view==='owner' ? OWNER[st.O] : STAFF[st.S];
+  const btns = (key, obj, lbl) => Object.keys(obj).map(k=>`<button data-k="${key}" data-v="${k}" class="${st[key]===k?'on':''}">${k} · ${lbl?lbl(k):obj[k].name}</button>`).join('');
+  document.getElementById('picker').innerHTML = `
+    <div class="grp"><b>View</b><button data-k="view" data-v="owner" class="${st.view==='owner'?'on':''}">Owner</button><button data-k="view" data-v="staff" class="${st.view==='staff'?'on':''}">Front desk</button></div>
+    <div class="grp"><b>Theme</b>${btns('theme',THEMES,k=>THEMES[k])}</div>
+    <div class="grp"><b>${st.view==='owner'?'Owner layout':'Staff layout'}</b>${st.view==='owner'?btns('O',OWNER):btns('S',STAFF)}</div>
+    <div class="desc">Selected: ${st.theme} + ${st.O} + ${st.S}. ${L.desc}</div>`;
+  document.getElementById('root').innerHTML = L.html();
+}
+document.getElementById('picker').addEventListener('click', e => { const b=e.target.closest('button[data-k]'); if(!b) return; st[b.dataset.k]=b.dataset.v; render(); });
+render();
+</script>
+</body>
+</html>
