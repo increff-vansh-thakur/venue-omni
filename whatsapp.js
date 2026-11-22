@@ -11,7 +11,7 @@ exports.start = async function start({ onStatus, onMessage, setSender }) {
   const pino = require('pino');
   const qrcode = require('qrcode-terminal');
   const allow = (process.env.WA_ALLOW || '').split(',').map(s => s.replace(/\D/g, '')).filter(Boolean);
-  const authDir = path.join(__dirname, '.wa-auth');
+  const authDir = process.env.WA_AUTH_DIR || path.join(__dirname, '.wa-auth');
 
   async function connect() {
     const { state, saveCreds } = await useMultiFileAuthState(authDir);

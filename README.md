@@ -23,7 +23,8 @@ WHATSAPP=1 SARVAM_API_KEY=your_key npm start
 |---|---|
 | `SARVAM_API_KEY` | Sarvam AI key for chat/STT. Without it the app runs with fallbacks only. |
 | `PORT` | HTTP port (default `3000`). |
-| `WHATSAPP` | Set to `1` to start the WhatsApp bot. Session is stored in `.wa-auth/`. |
+| `WHATSAPP` | Set to `1` to start the WhatsApp bot. |
+| `WA_AUTH_DIR` | Where the WhatsApp session is stored (default `./.wa-auth`). Point at a persistent volume when deployed. |
 
 ## Endpoints
 
