@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>TurfOS – Requirements & Understanding</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  body{font:10.5pt/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#1c2333;margin:0}
+  h1{font-size:24pt;margin:0 0 2px;letter-spacing:-.3px}
+  h2{font-size:14pt;margin:20px 0 6px;padding-bottom:3px;border-bottom:2px solid #4f46e5;color:#1e1b4b;page-break-after:avoid}
+  h3{font-size:11.5pt;margin:12px 0 4px;color:#312e81;page-break-after:avoid}
+  .sub{color:#5b6478;font-size:10.5pt;margin-bottom:12px}
+  .hero{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;margin:10px 0}
+  .hero b{color:#3730a3}
+  table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:9.5pt;page-break-inside:auto}
+  tr{page-break-inside:avoid}
+  th{background:#1e1b4b;color:#fff;text-align:left;padding:5px 7px;font-weight:600}
+  td{border-bottom:1px solid #e2e6f0;padding:5px 7px;vertical-align:top}
+  tr:nth-child(even) td{background:#f8f9fc}
+  code,pre{font-family:ui-monospace,Menlo,monospace;font-size:8.8pt}
+  pre{background:#0f172a;color:#e2e8f0;padding:9px 11px;border-radius:8px;white-space:pre-wrap;page-break-inside:avoid}
+  .pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:8.5pt;font-weight:700}
+  .b{background:#dcfce7;color:#166534}.p{background:#fef3c7;color:#92400e}.d{background:#e5e7eb;color:#374151}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .box{border:1px solid #e2e6f0;border-radius:8px;padding:8px 10px}
+  img{width:100%;border:1px solid #cbd5e1;border-radius:8px}
+  .cap{font-size:8.5pt;color:#5b6478;text-align:center;margin-top:3px}
+  .pb{page-break-before:always}
+  ul{margin:4px 0 8px 18px;padding:0} li{margin:2px 0}
+  .meta{display:flex;gap:18px;font-size:9pt;color:#5b6478;margin-top:4px}
+</style></head><body>
+
+<h1>⚽ TurfOS</h1>
+<div class="sub">Omnichannel slot fulfilment and AI pricing for Indian sports venues · Requirements &amp; understanding document · Hackathon build v1.0</div>
+<div class="meta"><span><b>Date:</b> 22 Nov 2026</span><span><b>Status:</b> Working demo built, requirements frozen</span><span><b>AI partner:</b> Sarvam AI (LLM · STT · TTS)</span></div>
+
+<div class="hero"><b>One line:</b> a venue owner should run every booking channel from <b>one inventory</b>, price each channel <b>on purpose</b>, and give instructions in <b>the language they think in</b>.</div>
+
+<h2>1. Problem statement</h2>
+<p>Independent sports venues in India (football turfs, box cricket, badminton, pickleball) sell the same perishable one-hour slot on 4–6 channels at once: aggregator apps, WhatsApp, phone calls and walk-ins. Inventory is synced by hand, through a register or a WhatsApp group.</p>
+<table>
+<tr><th style="width:38%">Pain</th><th>Consequence for the venue</th></tr>
+<tr><td>No single source of truth for inventory</td><td>Double bookings, refunds, angry regulars</td></tr>
+<tr><td>Flat pricing, no per-channel strategy</td><td>Empty off-peak slots; under-priced peak slots</td></tr>
+<tr><td>Aggregators take about 10–20% commission <i>(assumption)</i></td><td>Commission leaks even on repeat customers the venue already won</td></tr>
+<tr><td>The aggregator owns the player relationship</td><td>The venue can't re-market, so customer acquisition stays <i>rented</i></td></tr>
+<tr><td>Most aggregators have no public partner API</td><td>Integration has to be manual or semi-automated today</td></tr>
+<tr><td>Owners are Hindi/Hinglish-first and mobile-first</td><td>English, dashboard-heavy software doesn't get adopted</td></tr>
+</table>
+
+<h2>2. Personas &amp; jobs-to-be-done</h2>
+<table>
+<tr><th style="width:22%">Persona</th><th>Job-to-be-done</th><th style="width:30%">What the demo proves</th></tr>
+<tr><td><b>Venue owner</b><br>Owns one turf in Bengaluru, Hinglish-first, on his phone all day</td><td>"When a slot is going empty or a channel is eating my margin, I want to fix it <b>in one sentence</b> without learning software."</td><td>Hindi command console, AI Optimise, net-to-venue counters</td></tr>
+<tr><td><b>Front-desk staff</b><br>Handles walk-ins and phone calls</td><td>"When someone walks in, I want to book in one tap and know it <b>can't clash</b> with an app booking."</td><td>Booking on any channel locks the slot everywhere</td></tr>
+<tr><td><b>Player</b><br>Plays 5-a-side every week</td><td>"I want a confirmed slot at a fair price, and a cheaper option if I book direct."</td><td>Direct price ≤ aggregator price (Phase 2 turns players into direct customers)</td></tr>
+</table>
+
+<h2>3. Solution &amp; scope</h2>
+<div class="grid2">
+<div class="box"><b>Pillar 1: Omnichannel fulfilment (the "API router")</b><br>One slot ledger is the source of truth. A booking on any channel closes the slot on all the others, and the sync calls appear in a live log. A second booking attempt on a sold slot is rejected with a <code>409 CONFLICT</code>.</div>
+<div class="box"><b>Pillar 2: AI pricing per channel</b><br>A rule engine sets the baseline price. Sarvam AI then moves prices per slot × channel to maximise <b>net-to-venue</b>, with a one-line reason for every move and hard guardrails.</div>
+<div class="box"><b>Pillar 3: Vernacular owner console</b><br>The owner types or speaks in Hindi, Hinglish or English. Sarvam turns the command into structured actions, which are applied across channels, and a Hindi confirmation is spoken back.</div>
+<div class="box"><b>Stage safety</b><br>Every AI path has a deterministic offline fallback. The Sarvam key stays on the server. There's an offline toggle (<code>O</code>), a reset (<code>R</code>) and a hands-free <code>#autoplay</code> backup.</div>
+</div>
+
+<h3>Locked demo decisions</h3>
+<table>
+<tr><th style="width:24%">Decision</th><th>Value</th></tr>
+<tr><td>Venue</td><td>One 5-a-side turf, Bengaluru · base ₹1,000/hr · 17 one-hour slots a day (start hours 06–22, last slot 22:00–23:00) · Today and Tomorrow</td></tr>
+<tr><td>Channels</td><td><code>direct</code> Direct/WhatsApp 0% · <code>aggA</code> Aggregator A 20% · <code>aggB</code> Aggregator B 15% · <code>walkin</code> Walk-in 0%. These are generic mock channels, not real integrations.</td></tr>
+<tr><td>Build</td><td>A single <code>index.html</code> (vanilla JS, in-memory state) plus a zero-dependency Node proxy (<code>server.js</code>) that holds the key and serves the page from the same origin, so there's no CORS issue</td></tr>
+<tr><td>Day type</td><td>Taken from the real calendar. On demo day, today is <b>Sunday</b>, so the weekend multiplier shows, and tomorrow is Monday, a weekday.</td></tr>
+</table>
+
+<h2>4. Pricing model</h2>
+<table>
+<tr><th>Band</th><th>Start hours</th><th>Multiplier</th></tr>
+<tr><td>Peak</td><td>06, 07, 18, 19, 20, 21</td><td>× 1.3</td></tr>
+<tr><td>Shoulder</td><td>08, 09, 16, 17, 22</td><td>× 1.0</td></tr>
+<tr><td>Off-peak</td><td>10 – 15</td><td>× 0.8</td></tr>
+<tr><td>Weekend (day multiplier)</td><td>Sat / Sun</td><td>× 1.2</td></tr>
+</table>
+<pre>rule    = BASE × band × day
+listed  = (owner price override  OR  AI price  OR  rule) × (1 − owner discount %)
+listed  = clamp(round₹10(listed),  floor_listed(channel),  ₹1,800)
+net     = listed × (1 − commission)
+floor_listed(channel) = ₹600 ÷ (1 − commission)  →  Direct/Walk-in ₹600 · Agg B ₹710 · Agg A ₹750
+AI moves are bounded to ±30% of the rule price.  Booked slots are frozen at their booking price.</pre>
+<p>By default every channel shows <b>the same listed price</b>, so the differences in <b>net</b> make commission leakage visible straight away. For example, a weekday peak slot lists at ₹1,300: the venue nets ₹1,300 on Direct but only ₹1,040 on Aggregator A.</p>
+
+<h2 class="pb">5. Functional requirements &amp; build status</h2>
+<p><span class="pill b">BUILT</span> working in the demo · <span class="pill p">PARTIAL</span> simplified for the demo · <span class="pill d">DEFERRED</span> on the roadmap</p>
+<table>
+<tr><th style="width:7%">ID</th><th style="width:7%">M</th><th>Requirement · acceptance criteria</th><th style="width:11%">Status</th></tr>
+<tr><td>FR-1</td><td>M1</td><td>Grid of 17 slots × 4 channels per day, with Today and Tomorrow tabs and band labels</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-2</td><td>M1</td><td>Each cell shows the listed price and the net-to-venue price (net = listed × (1 − c))</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-3</td><td>M1</td><td>Booking from any channel cell marks the slot booked; <b>all 4 cells</b> lock and show the source channel; sync calls to the other 3 channels are logged</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-4</td><td>M1</td><td>Booking a slot that is already sold or closed is rejected (409), the cell flashes, and the "Double bookings blocked" counter goes up</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-5</td><td>M1</td><td>Cancelling a booking reopens the slot on every channel and logs the reopen sync</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-6</td><td>M1</td><td>Deterministic seed bookings: Today 07 Walk-in, Today 19 Agg A, Today 20 Direct, Tomorrow 20 Agg B. Tomorrow 19 stays open for the demo command. Reset (button or <code>R</code>) restores the seed.</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-7</td><td>M2</td><td>The §4 formula is applied to every open cell, with the net floor and ceiling enforced</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-9</td><td>M2</td><td>Live counters: bookings, occupancy, net revenue, commission paid, commission saved, double bookings blocked, AI slots filled</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-10</td><td>M3</td><td>"AI Optimise" sends a snapshot of the inventory (free slots and per-channel prices; booked slots shown only as status) to Sarvam through the proxy</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-11/12</td><td>M3</td><td>The LLM returns JSON in the Optimise schema. Each change is validated: the cell must exist, be free and be open; the price is bounded to ±30% of the rule price and clamped to the floor and ceiling; at most 10 changes; invalid entries are dropped and counted.</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-13</td><td>M3</td><td>Changed cells get a ✨ highlight and a reason on hover; a panel lists <code>₹old → ₹new</code> with reasons and a source badge reading <b>Sarvam AI</b> or <b>Fallback rules</b></td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-14</td><td>M3</td><td>Deterministic fallback optimiser: off-peak Direct −20%, Agg B −10%; peak Agg A +15%</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-16/17</td><td>M4</td><td>The command box takes Devanagari, Hinglish or English and submits on Enter. Sarvam parses the text into the Action schema.</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-18</td><td>M4</td><td>Guardrails are checked per action; invalid actions are rejected with a reason in the log, and the valid ones still apply</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-19</td><td>M4</td><td>Preview card with Apply/Cancel before committing. <i>The demo applies immediately and shows the parsed actions plus the reply.</i></td><td><span class="pill p">PARTIAL</span></td></tr>
+<tr><td>FR-20</td><td>M4</td><td>Hindi confirmation: <code>reply_hi</code> from the LLM, or a templated Hindi reply from the fallback</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-21</td><td>M4</td><td>Offline keyword parser. It passes all 8 test commands, including "kal shaam 7 baje Aggregator B band karo", "aaj 3 se 5 direct pe 20% discount do", "आज रात 9 बजे सब चैनल पर बंद करो" and "kal subah 6 baje walk-in book karo".</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>FR-22</td><td>S</td><td>Mic → Sarvam STT → transcript in the box → command runs. <i>Browser recordings are webm, which still needs checking against the Sarvam key.</i></td><td><span class="pill p">PARTIAL</span></td></tr>
+<tr><td>FR-23</td><td>S</td><td>Speak <code>reply_hi</code> with Sarvam TTS, falling back to the browser's <code>speechSynthesis</code> (hi-IN)</td><td><span class="pill b">BUILT</span></td></tr>
+<tr><td>—</td><td>—</td><td>Fixed demo clock and greyed-out past slots; a "Clear AI" button (Reset covers this for now)</td><td><span class="pill d">DEFERRED</span></td></tr>
+</table>
+
+<h3>Action schema (owner commands)</h3>
+<pre>{ "actions": [ { "type": "block | unblock | book | set_discount | set_price | clear",
+                 "day": "today | tomorrow", "start_hour": 19, "end_hour": 20,      // 24h, end exclusive
+                 "channels": ["direct" | "aggA" | "aggB" | "walkin" | "all"],
+                 "value": null } ],                                            // % for discount, ₹ for price
+  "reply_hi": "ठीक है, कल 19 से 20 बजे तक के स्लॉट बंद कर दिए…" }</pre>
+<p><b>Language rules:</b> "kal" always means tomorrow. "subah" means AM. "dopahar" means 12–16. "shaam" and "raat" mean PM. A bare hour from 1 to 11 <b>defaults to PM</b> unless a word like subah, morning or am says otherwise. "sab" or "all" means every channel.</p>
+
+<h3>Optimise schema (AI pricing)</h3>
+<pre>{ "changes": [ { "day": "tomorrow", "hour": 14, "channel": "direct", "new_price": 770,
+                 "reason": "Off-peak slot: 20% off on direct to fill with zero commission" } ],
+  "summary": "Discounted off-peak direct, premium on high-commission channels at peak" }</pre>
+
+<h3>Guardrails</h3>
+<table>
+<tr><th style="width:8%">ID</th><th>Rule</th><th style="width:42%">Behaviour</th></tr>
+<tr><td>GR-1</td><td>Never reprice a booked slot</td><td>Skipped; booked price is frozen</td></tr>
+<tr><td>GR-2</td><td>Net floor ₹600 and listed ceiling ₹1,800</td><td>An owner <code>set_price</code> outside the bounds is <b>rejected</b>; an AI move or discount is <b>clamped</b></td></tr>
+<tr><td>GR-3</td><td>AI moves bounded to ±30% of the rule price</td><td>Clamped</td></tr>
+<tr><td>GR-4</td><td>Schema violation (unknown type or channel, bad hours)</td><td>That action is dropped; the rest still apply</td></tr>
+<tr><td>GR-5</td><td>LLM output can't be parsed, or takes longer than 8 s</td><td>The offline parser or optimiser runs automatically, and the source badge says so</td></tr>
+</table>
+
+<h2>6. Non-functional requirements</h2>
+<table>
+<tr><th style="width:18%">Area</th><th>Requirement</th></tr>
+<tr><td>Key security</td><td><code>SARVAM_API_KEY</code> exists only in the proxy's environment. It never appears in the HTML, the JS or any response.</td></tr>
+<tr><td>Latency</td><td>Local actions take under 100 ms. LLM calls have a hard 8 s timeout, after which the fallback runs.</td></tr>
+<tr><td>Robust parsing</td><td>Strip any <code>&lt;think&gt;</code> block and code fences, take the outermost <code>{…}</code>, then validate it against the schema</td></tr>
+<tr><td>Stage safety</td><td>No CDN or external assets; deterministic seed data; <code>O</code> toggles offline mode, <code>R</code> resets; <code>/#autoplay</code> runs the whole story hands-free</td></tr>
+<tr><td>Honesty</td><td>A source badge on every AI result (Sarvam AI vs fallback); commission rates are labelled as assumptions</td></tr>
+</table>
+
+<h2 class="pb">7. Demo metrics</h2>
+<table>
+<tr><th style="width:26%">Metric</th><th>Computation</th></tr>
+<tr><td>Occupancy</td><td>Booked slots ÷ 34 (17 slots × 2 days)</td></tr>
+<tr><td>Net revenue to venue</td><td>Σ booking price × (1 − commission)</td></tr>
+<tr><td>Commission paid</td><td>Σ booking price × commission, over aggregator bookings</td></tr>
+<tr><td>Commission saved</td><td>Σ booking price × <b>15%</b> over Direct and Walk-in bookings. This is the conservative counterfactual: the cheapest aggregator's rate.</td></tr>
+<tr><td>Double bookings blocked</td><td>Count of 409 rejections</td></tr>
+<tr><td>AI slots filled</td><td>Bookings landing on slots that the AI had repriced</td></tr>
+</table>
+
+<h2>8. The working demo</h2>
+<img src="demo.png">
+<div class="cap">After <code>#autoplay</code> in offline mode: a walk-in booking locks 6 PM on every channel and a racing Aggregator A request is blocked; the fallback optimiser repriced 10 cells with reasons; two Hinglish commands closed tomorrow 7 PM on Aggregator B and put 20% off Direct from 3 to 5 PM, with the Hindi confirmation shown.</div>
+
+<h3>Run it</h3>
+<pre>cd ~/venue-omni
+SARVAM_API_KEY=xxxx node server.js        # open http://localhost:3000   (without a key it uses the offline fallbacks)
+# optional overrides: SARVAM_CHAT_MODEL, SARVAM_STT_MODEL, SARVAM_TTS_MODEL, SARVAM_TTS_SPEAKER</pre>
+
+<h2>9. 90-second demo script</h2>
+<table>
+<tr><th style="width:11%">Time</th><th style="width:44%">On screen</th><th>Line</th></tr>
+<tr><td>0–10s</td><td>The grid is loaded</td><td>"This turf sells the same 7 PM slot on four channels, by hand. That's where double bookings and 20% commissions come from."</td></tr>
+<tr><td>10–25s</td><td>Book Today 6 PM on Walk-in: all 4 cells lock. Then click Aggregator A on the same slot: 409, and the counter goes up.</td><td>"One inventory. Book anywhere and it's locked everywhere."</td></tr>
+<tr><td>25–35s</td><td>Point at the net row: Agg A nets ₹1,040 against Direct's ₹1,300</td><td>"Same price, but the venue keeps ₹260 less. Now you can see it."</td></tr>
+<tr><td>35–55s</td><td>Click ✨ AI Optimise and hover a reason</td><td>"Sarvam prices every slot per channel: fill the afternoons on direct, and protect margin where commission is high."</td></tr>
+<tr><td>55–80s</td><td>"kal shaam 7 baje Aggregator B band karo" → the cell closes and the confirmation is spoken in Hindi</td><td>"The owner doesn't learn software. He talks in Hinglish."</td></tr>
+<tr><td>80–90s</td><td>The counter strip</td><td>"Phase 1: control the inventory. Next: own the customer on WhatsApp and UPI."</td></tr>
+</table>
+
+<h2>10. Risks, assumptions &amp; out of scope</h2>
+<table>
+<tr><th style="width:34%">Risk</th><th>Mitigation</th></tr>
+<tr><td>Sarvam is slow or down, or returns malformed or <code>&lt;think&gt;</code> output</td><td>8 s timeout, robust parsing, offline fallbacks, offline toggle</td></tr>
+<tr><td>The LLM reads "7 baje" as AM</td><td>Explicit time rules in the prompt; the parsed time is shown in the reply and the log</td></tr>
+<tr><td>A judge asks "how do you actually sync with the aggregators?"</td><td>Be honest: there are no public APIs. Phase 1 is the source of truth plus manual or partner-dashboard sync; partner integrations come in Phase 3.</td></tr>
+<tr><td>Aggregators enforce rate parity</td><td>Per-channel pricing is configurable; "direct is cheaper" can become "direct gets perks" in Phase 2</td></tr>
+<tr><td>Sarvam STT rejects webm audio</td><td>The mic is a stretch goal; typing is always the primary path</td></tr>
+</table>
+<p><b>Assumptions:</b> the 20% and 15% commission rates are illustrative. Base price, bands, floor and ceiling are demo values that a venue would configure. Each slot is one hour on one court with one booking.<br>
+<b>Out of scope for the demo:</b> WhatsApp bot · UPI and split-pay · team formation · real aggregator integrations or scraping · login · database (state resets on reload) · multiple venues or courts · payments and refunds.</p>
+
+<h2>11. What judges should take away</h2>
+<ul>
+<li><b>The real problem is inventory and margin control, not discovery.</b> Venues lose money to double bookings, empty off-peak slots and commission on customers they already own.</li>
+<li><b>One inventory, every channel, with net-to-venue visible everywhere.</b> That makes commission leakage concrete.</li>
+<li><b>AI in the owner's language.</b> Sarvam powers Hinglish commands and per-channel pricing, with a reason for every change and guardrails that keep it safe.</li>
+<li><b>Built to survive the stage:</b> deterministic fallbacks everywhere, and the key stays on the server.</li>
+</ul>
+
+<h2>12. Roadmap</h2>
+<table>
+<tr><th style="width:16%">Phase</th><th style="width:20%">Theme</th><th>Scope</th></tr>
+<tr><td>1 · Now (pilot)</td><td>Control</td><td>Single-venue inventory, channel routing, rule-based and AI pricing, Hindi command console</td></tr>
+<tr><td>2 · ~3 months</td><td>Own the customer</td><td>WhatsApp booking bot with UPI · QR codes at the venue that turn aggregator players into direct customers · win-back campaigns for lapsed regulars</td></tr>
+<tr><td>3 · ~6 months</td><td>Network</td><td>Split-pay and team formation · a last-minute deals feed · partner integrations with aggregators · multi-venue chains</td></tr>
+<tr><td>4 · Moat</td><td>Autopilot</td><td>Demand forecasting (weather, events, history) driving pricing automatically, inside owner-set guardrails</td></tr>
+</table>
+</body></html>

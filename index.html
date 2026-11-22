@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>TurfOS</title>
+<style>
+  :root{
+    --bg:#F2F2F7; --surface:#FFFFFF; --elev:rgba(255,255,255,.72);
+    --label:#000; --label2:rgba(60,60,67,.60); --label3:rgba(60,60,67,.30);
+    --sep:rgba(60,60,67,.18); --fill:rgba(118,118,128,.12); --fill2:rgba(118,118,128,.08);
+    --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --purple:#AF52DE; --teal:#30B0C7; --gray:#8E8E93;
+    --wa:#25D366; --wa-bg:#EFEAE2; --wa-in:#FFFFFF; --wa-out:#D9FDD3; --wa-head:#008069;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04); --r-lg:16px; --r-md:12px; --r-sm:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#000; --surface:#1C1C1E; --elev:rgba(28,28,30,.72);
+      --label:#FFF; --label2:rgba(235,235,245,.60); --label3:rgba(235,235,245,.30);
+      --sep:rgba(84,84,88,.55); --fill:rgba(118,118,128,.24); --fill2:rgba(118,118,128,.16);
+      --blue:#0A84FF; --green:#30D158; --red:#FF453A; --orange:#FF9F0A; --purple:#BF5AF2; --teal:#40C8E0; --gray:#98989D;
+      --wa-bg:#0B141A; --wa-in:#202C33; --wa-out:#005C4B; --wa-head:#202C33; --shadow:none;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased}
+  body{margin:0;background:var(--bg);color:var(--label);font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;letter-spacing:-.01em}
+  svg.i{width:1em;height:1em;vertical-align:-.125em;fill:currentColor;flex:none}
+  .num,.p{font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 24px;
+         background:var(--elev);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .appicon{width:40px;height:40px;border-radius:10px;background:linear-gradient(160deg,#34C759,#248A3D);display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .appicon svg{width:24px;height:24px}
+  .title{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .subtitle{font-size:13px;color:var(--label2)}
+  .hstack{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:500;background:var(--fill);color:var(--label2)}
+  .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--label3)}
+  .badge.on{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)} .badge.on::before{background:var(--green)}
+  .badge.off{color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent)} .badge.off::before{background:var(--orange)}
+
+  button{font:inherit;font-size:15px;font-weight:600;border:none;border-radius:var(--r-sm);padding:0 14px;min-height:36px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+         color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,transparent);transition:opacity .15s,transform .1s}
+  button:hover{opacity:.85} button:active{transform:scale(.98)} button:disabled{opacity:.5;cursor:default}
+  button.primary{background:var(--blue);color:#fff} button.plain{background:transparent;padding:0 8px}
+  button.gray{color:var(--label);background:var(--fill)}
+  button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 55%,transparent);outline-offset:2px}
+
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:20px 24px 4px}
+  .kpi{background:var(--surface);border-radius:var(--r-md);padding:12px 14px;box-shadow:var(--shadow)}
+  .kpi .l{font-size:12px;color:var(--label2);font-weight:500}
+  .kpi .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+  .kpi .s{font-size:12px;color:var(--label2);margin-top:1px}
+  .kpi.good .v{color:var(--green)} .kpi.bad .v{color:var(--red)} .kpi.blue .v{color:var(--blue)}
+
+  main{display:grid;grid-template-columns:minmax(0,1fr) 350px 380px;gap:16px;padding:16px 24px 28px;align-items:start}
+  .card{background:var(--surface);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow)}
+  h3{display:flex;align-items:center;gap:7px;margin:0 0 10px;font-size:17px;font-weight:600;letter-spacing:-.02em}
+  h3 .aside{margin-left:auto;font-size:12px;font-weight:500;color:var(--label2)}
+  .col{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .segmented{display:inline-flex;padding:2px;border-radius:9px;background:var(--fill)}
+  .segmented button{background:transparent;color:var(--label);font-weight:500;font-size:13px;min-height:30px;border-radius:7px;padding:0 12px}
+  .segmented button.active{background:var(--surface);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04)}
+  @media (prefers-color-scheme: dark){ .segmented button.active{background:#636366} }
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--label2);margin:0 0 6px 4px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+  table{width:100%;border-collapse:separate;border-spacing:4px}
+  th{font-size:13px;font-weight:600;text-align:left;padding:2px 8px;vertical-align:bottom}
+  th .c{font-size:11.5px;font-weight:400;color:var(--label2)}
+  th .src{display:inline-flex;align-items:center;gap:5px}
+  td.time{white-space:nowrap;font-size:13.5px;font-weight:600;padding:0 6px}
+  td.time span{display:block;font-size:11px;font-weight:500;color:var(--label2)}
+  td.cell{background:var(--fill2);border-radius:var(--r-sm);padding:6px 9px;cursor:pointer;position:relative;min-width:104px;max-width:180px;transition:background .2s,box-shadow .2s}
+  td.cell:hover{background:var(--fill)}
+  .p{font-weight:600;font-size:15.5px}
+  .n{font-size:11.5px;color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .disc{color:var(--green);font-size:11.5px;font-weight:600}
+  .lockmsg{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden}
+  td.cell.mine{background:color-mix(in srgb,var(--src) 18%,transparent)} td.cell.mine .lockmsg{color:var(--src)}
+  td.cell.blocked{background:color-mix(in srgb,var(--red) 8%,transparent);cursor:not-allowed} td.cell.blocked .lockmsg{color:var(--red)}
+  td.cell.sold{background:var(--fill2);cursor:not-allowed} td.cell.sold .lockmsg{color:var(--label2)}
+  td.cell.hold{background:color-mix(in srgb,var(--orange) 16%,transparent)} td.cell.hold .lockmsg{color:var(--orange)}
+  td.cell.owner{background:repeating-linear-gradient(135deg,var(--fill) 0 6px,transparent 6px 12px);cursor:not-allowed} td.cell.owner .lockmsg{color:var(--label2)}
+  td.cell.closed{background:transparent;box-shadow:inset 0 0 0 1px var(--sep)} td.cell.closed .lockmsg{color:var(--label2)}
+  td.cell.ai{box-shadow:inset 0 0 0 1.5px var(--purple);background:color-mix(in srgb,var(--purple) 8%,transparent)}
+  .tag{position:absolute;top:5px;right:7px;font-size:12px;color:var(--purple)}
+  .ps{display:inline-flex;align-items:center;gap:3px}
+  .ps.acked{color:var(--green)} .ps.pending,.ps.retrying{color:var(--orange)}
+  td.cell.flash{animation:flash .9s ease-out} @keyframes flash{0%{background:color-mix(in srgb,var(--red) 45%,transparent)}}
+  .foot{font-size:12px;color:var(--label2);margin-top:8px}
+
+  .phone{border-radius:28px;overflow:hidden;background:var(--wa-bg);box-shadow:0 0 0 8px #1c1c1e,0 0 0 9px #3a3a3c,0 12px 30px rgba(0,0,0,.25);margin:8px 6px 6px;display:flex;flex-direction:column;height:560px}
+  .wa-head{background:var(--wa-head);color:#fff;display:flex;align-items:center;gap:10px;padding:12px 12px 10px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--wa-head);display:grid;place-items:center;font-weight:700;font-size:13px}
+  @media (prefers-color-scheme: dark){ .avatar{background:#25D366;color:#fff} }
+  .wa-head b{display:block;font-size:15px} .wa-head small{font-size:11.5px;opacity:.85}
+  .wa-body{flex:1;overflow-y:auto;padding:10px 10px 6px;display:flex;flex-direction:column;gap:6px}
+  .bub{max-width:86%;padding:6px 9px 4px;border-radius:9px;font-size:13.5px;line-height:1.38;box-shadow:0 1px .5px rgba(0,0,0,.13);white-space:pre-wrap;word-wrap:break-word;color:var(--label)}
+  .bub.bot{align-self:flex-start;background:var(--wa-in);border-top-left-radius:2px}
+  .bub.user{align-self:flex-end;background:var(--wa-out);border-top-right-radius:2px}
+  .bub .t{display:block;text-align:right;font-size:10.5px;color:var(--label2);margin-top:1px}
+  .bub a{color:#027EB5;word-break:break-all} @media (prefers-color-scheme: dark){.bub a{color:#53BDEB}}
+  .wbtns{align-self:flex-start;display:flex;flex-direction:column;gap:4px;width:86%}
+  .wbtns button{background:var(--wa-in);color:#027EB5;font-size:13.5px;min-height:34px;justify-content:center;border-radius:9px;box-shadow:0 1px .5px rgba(0,0,0,.13)}
+  @media (prefers-color-scheme: dark){.wbtns button{color:#53BDEB}}
+  .typing{align-self:flex-start;background:var(--wa-in);border-radius:9px;padding:9px 12px;display:flex;gap:4px}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--label3);animation:bl 1s infinite} .typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+  @keyframes bl{50%{opacity:.25}}
+  .wa-comp{display:flex;gap:6px;padding:8px}
+  .wa-comp input{flex:1;border:none;border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;background:var(--wa-in);color:var(--label)}
+  .wa-comp button{width:40px;min-height:40px;border-radius:50%;padding:0;justify-content:center;background:var(--wa);color:#fff}
+  .sugg{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chip{font-size:12px;padding:5px 10px;border-radius:999px;background:var(--fill);cursor:pointer;color:var(--label);border:none;font-weight:500;min-height:0}
+  .chip:hover{background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue)}
+  select{font:inherit;font-size:13px;background:var(--fill);color:var(--label);border:none;border-radius:8px;padding:6px 8px}
+  .note{font-size:12px;color:var(--label2);margin-top:8px}
+  code{font:12px ui-monospace,"SF Mono",Menlo,monospace;background:var(--fill);padding:1px 5px;border-radius:5px}
+
+  .feed{height:290px;overflow:auto;border-radius:var(--r-sm);background:var(--fill2)}
+  .prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-bottom:.5px solid var(--sep);font-size:12.5px}
+  .prow .w b{font-weight:600} .prow .w small{display:block;color:var(--label2);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:6px}
+  .pill.BLOCK{color:var(--red);background:color-mix(in srgb,var(--red) 14%,transparent)}
+  .pill.UNBLOCK{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}
+  .pill.PRICE{color:var(--purple);background:color-mix(in srgb,var(--purple) 14%,transparent)}
+  .pill.CONFIRM{color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,transparent)}
+  .st{font-size:12px;font-weight:600;white-space:nowrap}
+  .st.acked{color:var(--green)} .st.pending,.st.retrying{color:var(--orange)}
+  .new{animation:nw 1.2s ease-out} @keyframes nw{0%{background:color-mix(in srgb,var(--blue) 18%,transparent)}}
+  .act{font:12px/1.55 ui-monospace,"SF Mono",Menlo,monospace;padding:8px 10px}
+  .act div{white-space:pre-wrap;padding:1px 0}
+  .ok{color:var(--green)} .err{color:var(--red)} .ai{color:var(--purple)} .info{color:var(--label2)} .mcp{color:var(--teal)} .warn{color:var(--orange)} .mut{color:var(--label2)}
+
+  textarea{width:100%;min-height:62px;background:var(--fill2);color:var(--label);border:none;border-radius:var(--r-sm);padding:10px 12px;font:inherit;font-size:14px;resize:vertical}
+  textarea::placeholder,input::placeholder{color:var(--label3)}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .reply{margin-top:10px;padding:10px 12px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--green) 12%,transparent);font-size:13.5px;display:none}
+  .reasons{max-height:170px;overflow:auto;font-size:13px}
+  .reasons div{padding:7px 0;border-bottom:.5px solid var(--sep)} .reasons div:last-child{border-bottom:none}
+  .switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--label2);cursor:pointer;margin-left:auto}
+  .switch input{appearance:none;-webkit-appearance:none;width:42px;height:26px;border-radius:13px;background:var(--fill);position:relative;cursor:pointer;transition:background .2s;margin:0}
+  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+  .switch input:checked{background:var(--green)} .switch input:checked::after{transform:translateX(16px)}
+  button.rec{background:var(--red)!important;color:#fff!important}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite} @keyframes s{to{transform:rotate(360deg)}}
+
+  dialog{border:none;border-radius:20px;padding:0;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--label);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  dialog::backdrop{background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
+  .sheet-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:.5px solid var(--sep)}
+  .sheet-h b{font-size:17px}
+  .sheet-b{padding:14px 16px 18px;display:flex;flex-direction:column;gap:12px}
+  .field label{display:block;font-size:12px;color:var(--label2);margin:0 0 4px 2px;font-weight:500}
+  .field input,.field select{width:100%;font:inherit;font-size:15px;background:var(--fill2);color:var(--label);border:none;border-radius:var(--r-sm);padding:10px 12px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--elev);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--label);padding:10px 16px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.2);font-size:14px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+
+
+  /* ───────── Roles ───────── */
+  [hidden]{display:none!important}
+  #roleSw button{min-width:76px}
+  body.staff .owner-only{display:none!important}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:20px 24px 4px}
+  .smain{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1.05fr);gap:16px;padding:16px 24px 28px;align-items:start}
+  .kpi .v.sm{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi.warn .v{color:var(--orange)}
+
+  /* Calendar */
+  .cal{display:grid;grid-template-columns:54px 1fr 1fr;border-radius:var(--r-md);overflow:hidden;background:var(--fill2)}
+  .cal .ch{position:sticky;top:0;padding:8px 10px;font-size:13px;font-weight:600;background:var(--surface);border-bottom:.5px solid var(--sep)}
+  .cal .ch small{display:block;font-weight:500;color:var(--label2);font-size:11.5px}
+  .cal .tl{font-size:11.5px;color:var(--label2);text-align:right;padding:4px 8px 0 0;height:58px;border-top:.5px solid var(--sep);font-variant-numeric:tabular-nums}
+  .cal .cc{position:relative;height:58px;border-top:.5px solid var(--sep);border-left:.5px solid var(--sep);padding:3px 4px}
+  .cal .cc.past{opacity:.45}
+  .cal .cc.past .ev{cursor:pointer}
+  .ev{height:100%;border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:1px;overflow:hidden;
+      background:color-mix(in srgb,var(--src) 16%,var(--surface));border-left:3px solid var(--src);transition:transform .1s}
+  .ev:hover{transform:scale(1.01)}
+  .ev .nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;align-items:center}
+  .ev .mt{font-size:11.5px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ev.arrived{--src:var(--green)!important}
+  .ev.no_show{opacity:.6;background:var(--fill2);border-left-color:var(--red)} .ev.no_show .nm{text-decoration:line-through}
+  .ev.hold{--src:var(--orange)}
+  .ev.block{--src:var(--gray);background:repeating-linear-gradient(135deg,var(--fill) 0 6px,transparent 6px 12px)}
+  .free{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-size:12px;color:var(--label3);cursor:pointer}
+  .free:hover{background:color-mix(in srgb,var(--blue) 10%,transparent);color:var(--blue)}
+  .free .plus{opacity:0;font-weight:600} .free:hover .plus{opacity:1}
+  .free.x{cursor:default} .free.x:hover{background:none;color:var(--label3)}
+  .nowline{position:absolute;left:0;right:0;height:2px;background:var(--red);z-index:2;pointer-events:none}
+  .nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--red)}
+  .st-chip{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;flex:none}
+  .st-chip.arrived{color:var(--green);background:color-mix(in srgb,var(--green) 16%,transparent)}
+  .st-chip.no_show{color:var(--red);background:color-mix(in srgb,var(--red) 14%,transparent)}
+  .st-chip.soon{color:var(--orange);background:color-mix(in srgb,var(--orange) 16%,transparent)}
+  .st-chip.now{color:var(--blue);background:color-mix(in srgb,var(--blue) 16%,transparent)}
+
+  /* Front desk */
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r-md);background:var(--fill2)}
+  .item .when{font-size:13px;font-weight:700;line-height:1.15} .item .when small{display:block;font-size:11px;font-weight:500;color:var(--label2)}
+  .item .who{min-width:0} .item .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .who small{display:block;font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .btns{display:flex;gap:6px}
+  .item button{min-height:32px;font-size:13px;padding:0 10px}
+  button.go{background:var(--green);color:#fff}
+  .empty{font-size:13px;color:var(--label2);padding:10px 4px}
+  .sub{font-size:13px;font-weight:600;color:var(--label2);margin:16px 0 8px;display:flex;align-items:center;gap:6px}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .quick button{justify-content:center;min-height:44px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips .chip b{font-weight:600}
+
+  /* Inbox */
+  .inbox{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow:auto;margin-bottom:10px}
+  .conv{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer}
+  .conv:hover{background:var(--fill2)} .conv.sel{background:var(--fill)}
+  .conv .avatar{width:36px;height:36px;background:color-mix(in srgb,var(--wa) 22%,transparent);color:var(--label)}
+  .conv b{display:block;font-size:14px} .conv small{display:block;font-size:12px;color:var(--label2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .conv .r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11px;color:var(--label2)}
+  .unread{background:var(--wa);color:#fff;font-size:11px;font-weight:700;border-radius:999px;min-width:19px;height:19px;display:grid;place-items:center;padding:0 5px}
+  .flag{font-size:10.5px;font-weight:700;color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent);padding:1px 6px;border-radius:5px}
+  .thread{border-radius:var(--r-md);background:var(--wa-bg);height:330px;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+  .bub.staff{align-self:flex-end;background:color-mix(in srgb,var(--blue) 20%,var(--wa-in));border-top-right-radius:2px}
+  .bub .by{display:block;font-size:10.5px;font-weight:700;color:var(--label2);margin-bottom:1px}
+  .thread .bub.user{align-self:flex-start;background:var(--wa-in);border-top-left-radius:2px;border-top-right-radius:9px}
+  .bub.bot.mine{align-self:flex-end;background:var(--wa-out);border-top-left-radius:9px;border-top-right-radius:2px}
+  .reply-bar{display:flex;gap:6px;margin-top:8px}
+  .reply-bar input{flex:1;border:none;border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;background:var(--fill2);color:var(--label)}
+  .thead{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+  .thead b{font-size:15px}
+  .canned{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+  .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:14px}
+  .kv span{color:var(--label2)}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .acts button{flex:1;justify-content:center;min-height:42px}
+  button.danger{color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+
+  @media (max-width:1300px){.smain{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.smain>.cal-card{grid-column:1 / -1}}
+  @media (max-width:860px){.smain{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition:none!important}}
+  @media (max-width:1380px){main{grid-template-columns:minmax(0,1fr) 350px}.col.side{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:1000px){main{grid-template-columns:1fr}.col.side{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:640px){header,main,.kpis{padding-left:16px;padding-right:16px}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="appicon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.6"/><path d="M3 9.5h2.5v5H3M21 9.5h-2.5v5H21"/></svg></div>
+    <div><div class="title">TurfOS</div><div class="subtitle" id="subtitle">Kickoff Arena, Koramangala · 5-a-side · One inventory, every channel</div></div>
+  </div>
+  <div class="hstack">
+    <div class="segmented" id="roleSw" role="tablist" aria-label="View as"><button data-role="owner">Owner</button><button data-role="staff">Staff</button></div>
+    <span id="waBadge" class="badge">WhatsApp: Simulated</span>
+    <span id="aiBadge" class="badge owner-only">Connecting…</span>
+    <button id="resetBtn" class="plain owner-only">Reset</button>
+  </div>
+</header>
+
+<div id="ownerView">
+<section class="kpis">
+  <div class="kpi"><div class="l">Bookings</div><div class="v num" id="kBookings">0</div><div class="s" id="kSplit">—</div></div>
+  <div class="kpi"><div class="l">Occupancy</div><div class="v num" id="kOcc">0%</div><div class="s">of 34 slots · 2 days</div></div>
+  <div class="kpi good"><div class="l">Net Revenue to Venue</div><div class="v num" id="kNet">₹0</div><div class="s" id="kPaid">₹0 commission paid</div></div>
+  <div class="kpi good"><div class="l">Commission Saved</div><div class="v num" id="kSaved">₹0</div><div class="s">WhatsApp + Offline vs cheapest app</div></div>
+  <div class="kpi blue"><div class="l">Marketplace Postings</div><div class="v num" id="kPost">0</div><div class="s" id="kAck">—</div></div>
+  <div class="kpi bad"><div class="l">Double Bookings Blocked</div><div class="v num" id="kConf">0</div><div class="s" id="kMcp">0 MCP tool calls</div></div>
+</section>
+
+<main>
+  <section class="card">
+    <div class="toolbar">
+      <div class="segmented" id="days"><button data-day="today">Today</button><button data-day="tomorrow">Tomorrow</button></div>
+      <span style="flex:1"></span>
+      <button id="aggBtn" title="Simulate an inbound aggregator booking webhook"><svg class="i" viewBox="0 0 24 24"><path d="M4 4h16v4H4zM4 10h7v10H4zM13 10h7v4h-7zM13 16h7v4h-7z"/></svg>Aggregator Booking</button>
+      <button id="offBtn" class="gray"><svg class="i" viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5 0 9 2.5 9 5.5V22H3v-2.5C3 16.5 7 14 12 14z"/></svg>Offline Booking</button>
+      <button id="optBtn" class="primary"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Optimise</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--wa)"></i>WhatsApp booking</span>
+      <span><i class="dot" style="background:var(--blue)"></i>Aggregator booking</span>
+      <span><i class="dot" style="background:var(--gray)"></i>Offline / walk-in</span>
+      <span><i class="dot" style="background:var(--orange)"></i>Payment hold</span>
+      <span><i class="dot" style="background:var(--red)"></i>Blocked on marketplace</span>
+    </div>
+    <table id="grid"></table>
+    <div class="foot">Aggregator columns: tap to simulate an inbound booking · Offline: tap to add a walk-in, phone booking or owner block · WhatsApp: tap to ask for that slot in the chat · Tap your own booking to cancel · Tap a sold slot on another channel to test a double booking</div>
+  </section>
+
+  <section class="card">
+    <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--wa)"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>
+      WhatsApp Booking<span class="aside" id="chatPicker"></span></h3>
+    <div class="phone">
+      <div class="wa-head">
+        <div class="avatar">KA</div>
+        <div><b>Kickoff Arena ✓</b><small id="waSub">Business account · replies instantly</small></div>
+      </div>
+      <div class="wa-body" id="waBody"></div>
+      <form class="wa-comp" id="waForm">
+        <input id="waInput" autocomplete="off" placeholder="Message">
+        <button type="submit" aria-label="Send"><svg class="i" viewBox="0 0 24 24"><path d="M3 20.5V14l9-2-9-2V3.5L22 12z"/></svg></button>
+      </form>
+    </div>
+    <div class="sugg" id="waSugg"></div>
+    <div class="note">The bot books only through MCP tools on this server: <code>check_availability</code> → <code>hold_slot</code> → <code>confirm_booking</code></div>
+  </section>
+
+  <div class="col side">
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M6 3a3 3 0 0 1 1 5.83V11h4a3 3 0 0 0 3-3v-.17a3 3 0 1 1 2 0V8a5 5 0 0 1-5 5H7v2.17a3 3 0 1 1-2 0V8.83A3 3 0 0 1 6 3z"/></svg>Channel Router
+        <span class="aside"><span class="segmented" id="feedTabs"><button data-f="postings" class="active">Postings</button><button data-f="activity">Activity</button></span></span></h3>
+      <div class="feed" id="feed"></div>
+    </section>
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>Owner Command</h3>
+      <textarea id="cmd" placeholder="Hindi, Hinglish or English — e.g. kal shaam 7 se 9 Aggregator B pe band karo"></textarea>
+      <div class="sugg" id="examples"></div>
+      <div class="row">
+        <button id="runBtn" class="primary">Run</button>
+        <button id="micBtn"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0h-2a5 5 0 0 1-10 0zM11 18h2v4h-2z"/></svg>Speak</button>
+        <label class="switch"><input type="checkbox" id="speak" checked> Spoken reply</label>
+      </div>
+      <div class="reply" id="reply"></div>
+    </section>
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--purple)"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/></svg>AI Pricing Decisions</h3>
+      <div class="reasons" id="reasons"><div class="mut">Tap Optimise to reprice free slots per channel. Marketplace price changes are posted automatically.</div></div>
+    </section>
+  </div>
+</main>
+</div>
+
+<div id="staffView" hidden>
+  <section class="stats">
+    <div class="kpi blue"><div class="l">Next arrival</div><div class="v sm" id="sNext">—</div><div class="s" id="sNextSub">—</div></div>
+    <div class="kpi"><div class="l">Today's bookings</div><div class="v num" id="sToday">0</div><div class="s" id="sTodaySub">—</div></div>
+    <div class="kpi good"><div class="l">Checked in</div><div class="v num" id="sIn">0</div><div class="s" id="sInSub">—</div></div>
+    <div class="kpi warn"><div class="l">WhatsApp queries to answer</div><div class="v num" id="sQ">0</div><div class="s" id="sQSub">—</div></div>
+  </section>
+  <main class="smain">
+    <section class="card cal-card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--red)"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zM5 9v11h14V9z"/></svg>Bookings Calendar
+        <span class="aside">Tap a booking for details · tap a free slot to add a walk-in</span></h3>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--wa)"></i>WhatsApp</span>
+        <span><i class="dot" style="background:var(--blue)"></i>App (aggregator)</span>
+        <span><i class="dot" style="background:var(--gray)"></i>Walk-in / phone</span>
+        <span><i class="dot" style="background:var(--green)"></i>Checked in</span>
+        <span><i class="dot" style="background:var(--orange)"></i>Payment pending</span>
+      </div>
+      <div class="cal" id="cal"></div>
+    </section>
+
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5 0 9 2.5 9 5.5V22H3v-2.5C3 16.5 7 14 12 14z"/></svg>Front Desk</h3>
+      <div class="quick">
+        <button class="primary" id="qWalk">+ Walk-in</button>
+        <button id="qPhone">+ Phone booking</button>
+      </div>
+      <div class="sub">Arriving next · today</div>
+      <div class="list" id="upNext"></div>
+      <div class="sub">On the turf now</div>
+      <div class="list" id="onTurf"></div>
+      <div class="sub">Free today · tap to book</div>
+      <div class="chips" id="freeToday"></div>
+    </section>
+
+    <section class="card">
+      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--wa)"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp Queries
+        <span class="aside" id="inboxAside"></span></h3>
+      <div class="segmented" id="inboxTabs" style="margin-bottom:8px"><button data-t="need" class="active">Needs reply</button><button data-t="all">All chats</button></div>
+      <div class="inbox" id="inbox"></div>
+      <div id="threadWrap">
+        <div class="thead" id="thead"></div>
+        <div class="thread" id="thread"></div>
+        <div class="canned" id="canned"></div>
+        <form class="reply-bar" id="replyForm">
+          <input id="replyInput" autocomplete="off" placeholder="Reply as front desk…">
+          <button type="submit" class="primary">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="bkSheet">
+  <div class="sheet-h"><b id="bkTitle">Booking</b><button type="button" class="plain" id="bkClose">Done</button></div>
+  <div class="sheet-b" id="bkBody"></div>
+</dialog>
+
+<dialog id="offSheet">
+  <form id="offForm">
+    <div class="sheet-h"><button type="button" class="plain" id="offCancel">Cancel</button><b>Offline Booking</b><button type="submit" class="plain" id="offSave">Add</button></div>
+    <div class="sheet-b">
+      <div class="segmented" id="offKind" style="display:flex">
+        <button type="button" data-k="walkin" class="active" style="flex:1">Walk-in</button>
+        <button type="button" data-k="phone" style="flex:1">Phone Call</button>
+        <button type="button" data-k="owner" style="flex:1" class="owner-only">Owner Block</button>
+      </div>
+      <div class="two">
+        <div class="field"><label>Day</label><select id="offDay"><option value="today">Today</option><option value="tomorrow">Tomorrow</option></select></div>
+        <div class="field"><label>Slot</label><select id="offHour"></select></div>
+      </div>
+      <div class="field" id="fName"><label>Customer name</label><input id="offName" placeholder="e.g. Arjun"></div>
+      <div class="field" id="fPhone"><label>Phone</label><input id="offPhone" placeholder="+91 98xxx xxxxx" inputmode="tel"></div>
+      <div class="field" id="fNote" style="display:none"><label>Reason</label><select id="offNote"><option>Maintenance</option><option>Coaching session</option><option>Private tournament</option><option>Regulars (owner hold)</option></select></div>
+      <div class="note" id="offPrice"></div>
+    </div>
+  </form>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script src="/engine.js"></script>
+<script>
+const E = window.Engine;
+const $ = id => document.getElementById(id);
+const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+const SRC_COLOR = { whatsapp: 'var(--wa)', aggA: 'var(--blue)', aggB: 'var(--blue)', offline: 'var(--gray)' };
+const I = {
+  check: '<svg class="i" viewBox="0 0 24 24"><path d="M9.5 16.2 5.3 12l-1.4 1.4 5.6 5.6L20.6 8 19.2 6.6z"/></svg>',
+  lock: '<svg class="i" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>',
+  xmark: '<svg class="i" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm3.5 12.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1z"/></svg>',
+  spark: '<svg class="i" viewBox="0 0 24 24"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',
+  clock: '<svg class="i" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.4 3.5 2-1 1.7L11 13V6h2z"/></svg>',
+  wrench: '<svg class="i" viewBox="0 0 24 24"><path d="M21 7a5 5 0 0 1-6.6 4.7L6 20.1 3.9 18l8.4-8.4A5 5 0 0 1 18.5 3l-3 3 1.5 1.5 3-3c.6.8 1 1.7 1 2.5z"/></svg>',
+  mic: '<svg class="i" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0h-2a5 5 0 0 1-10 0zM11 18h2v4h-2z"/></svg>',
+  stop: '<svg class="i" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+};
+
+let S = null, view = 'today', feedTab = 'postings', chatSel = 'sim', aiOnline = false, aiForcedOff = false, seenPostings = new Set();
+const api = (p, body) => fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(r => r.json());
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400); }
+
+// ───────── Live state from the server ─────────
+function connect() {
+  const es = new EventSource('/api/events');
+  es.onmessage = e => { S = JSON.parse(e.data); render(); if (bkOpen) renderBooking(); };
+  es.onerror = () => { $('aiBadge').textContent = 'Server offline'; $('aiBadge').className = 'badge off'; };
+}
+function postStatus(d, h, target) {
+  const p = S.postings.find(p => p.day === d && p.hour === h && p.target === target && (p.type === 'BLOCK' || p.type === 'CONFIRM'));
+  if (!p) return '';
+  return p.status === 'acked' ? `<span class="ps acked">${I.check}posted · ${p.ms}ms</span>` : `<span class="ps ${p.status}">${p.status === 'retrying' ? '↻ retrying' : '… posting'}</span>`;
+}
+
+function render() {
+  if (!S) return;
+  renderBadges();
+  document.querySelectorAll('#days button').forEach(b => {
+    b.classList.toggle('active', b.dataset.day === view);
+    const dt = E.dayDate(b.dataset.day);
+    b.textContent = `${E.dayLabel(b.dataset.day)} · ${dt.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' })}${E.isWeekend(b.dataset.day) ? ' · Weekend' : ''}`;
+  });
+  if (role === 'staff') return renderStaff();
+  renderGrid(); renderKpis(); renderFeed(); renderChat();
+}
+function renderBadges() {
+  aiOnline = S.ai && !aiForcedOff;
+  const a = $('aiBadge'); a.textContent = aiOnline ? 'Sarvam AI Connected' : 'Offline · Rule-Based Fallbacks'; a.className = 'badge owner-only ' + (aiOnline ? 'on' : 'off');
+  const w = $('waBadge'), st = S.wa?.status || 'off';
+  w.textContent = { off: 'WhatsApp: Simulated', scan_qr: 'WhatsApp: Scan QR in terminal', linked: `WhatsApp: Live +${S.wa.number || ''}`, reconnecting: 'WhatsApp: Reconnecting…', logged_out: 'WhatsApp: Logged out', error: 'WhatsApp: Error' }[st] || st;
+  w.className = 'badge ' + (st === 'linked' ? 'on' : st === 'off' ? '' : 'off');
+}
+
+function renderGrid() {
+  const now = Date.now();
+  let html = '<tr><th>Slot</th>' + E.CHANNELS.map(c => `<th><span class="src"><i class="dot" style="background:${SRC_COLOR[c.id]}"></i>${c.name}</span><div class="c">${c.sub}</div></th>`).join('') + '</tr>';
+  for (const h of E.HOURS) {
+    const sl = S.slots[view][h];
+    html += `<tr><td class="time">${E.hLabel(h)}<span>${E.band(h).label}</span></td>`;
+    for (const c of E.CHANNELS) {
+      const k = `${view}|${h}|${c.id}`, b = sl.booking, hd = sl.hold;
+      if (b) {
+        if (b.kind === 'owner') html += `<td class="cell owner" data-k="${k}"><div class="lockmsg">${I.wrench}Owner block</div><div class="n">${c.marketplace ? postStatus(view, h, c.id) || esc(b.note) : esc(b.note)}</div></td>`;
+        else if (b.channel === c.id) html += `<td class="cell mine" style="--src:${SRC_COLOR[c.id]}" data-k="${k}"><div class="lockmsg">${I.check}${esc(b.ref)} · ${rupee(b.price)}</div><div class="n">${esc(b.customer)} · net ${rupee(b.net)}${b.status === 'arrived' ? ' · ✓ in' : b.status === 'no_show' ? ' · no-show' : ''}</div></td>`;
+        else if (c.marketplace) html += `<td class="cell blocked" data-k="${k}"><div class="lockmsg">${I.lock}Blocked</div><div class="n">${postStatus(view, h, c.id) || 'sold via ' + E.chName(b.channel)}</div></td>`;
+        else html += `<td class="cell sold" data-k="${k}"><div class="lockmsg">${I.lock}Sold</div><div class="n">via ${E.chName(b.channel)}</div></td>`;
+      } else if (hd) {
+        const left = Math.max(0, Math.round((hd.expires - now) / 1000)), mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+        if (c.id === 'whatsapp') html += `<td class="cell hold" data-k="${k}"><div class="lockmsg">${I.clock}Hold ${mm}</div><div class="n">${esc(hd.customer)} · ${rupee(hd.price)}</div></td>`;
+        else if (c.marketplace) html += `<td class="cell blocked" data-k="${k}"><div class="lockmsg">${I.lock}Blocked</div><div class="n">${postStatus(view, h, c.id) || 'payment hold'}</div></td>`;
+        else html += `<td class="cell sold" data-k="${k}"><div class="lockmsg">${I.clock}Held</div><div class="n">WhatsApp payment</div></td>`;
+      } else if (E.closedFor(view, h, c.id)) {
+        html += `<td class="cell sold" data-k="${k}" style="opacity:.5"><div class="lockmsg">Past</div><div class="n">slot started</div></td>`;
+      } else if (sl.closed[c.id]) {
+        html += `<td class="cell closed" data-k="${k}"><div class="lockmsg">${I.xmark}Closed</div><div class="n">${c.marketplace ? postStatus(view, h, c.id) || 'by owner' : 'by owner'}</div></td>`;
+      } else {
+        const p = E.listed(sl, view, h, c.id), ai = sl.reason[c.id];
+        const disc = sl.disc[c.id] ? `<span class="disc"> −${sl.disc[c.id]}%</span>` : '';
+        html += `<td class="cell ${ai ? 'ai' : ''}" data-k="${k}" title="${ai ? 'AI: ' + esc(ai) : ''}">${ai ? `<span class="tag">${I.spark}</span>` : ''}<div class="p">${rupee(p)}${disc}</div><div class="n">net ${rupee(E.net(p, c.id))}</div></td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  $('grid').innerHTML = html;
+}
+
+function renderKpis() {
+  let n = 0, occ = 0, rev = 0, paid = 0, saved = 0; const split = { whatsapp: 0, aggregator: 0, offline: 0 };
+  for (const d of E.DAYS) for (const h of E.HOURS) {
+    const b = S.slots[d][h].booking; if (!b) continue; occ++;
+    if (b.kind === 'owner') continue;
+    const c = E.ch(b.channel); n++; rev += b.net; paid += b.price * c.comm; split[c.source]++;
+    if (!c.marketplace) saved += b.price * E.SAVED_RATE;
+  }
+  $('kBookings').textContent = n; $('kSplit').textContent = `WhatsApp ${split.whatsapp} · Apps ${split.aggregator} · Offline ${split.offline}`;
+  $('kOcc').textContent = Math.round(occ / 34 * 100) + '%';
+  $('kNet').textContent = rupee(rev); $('kPaid').textContent = `${rupee(paid)} commission paid`; $('kSaved').textContent = rupee(saved);
+  $('kPost').textContent = S.stats.postings;
+  const acked = S.postings.filter(p => p.status === 'acked').length;
+  $('kAck').textContent = S.postings.length ? `${Math.round(acked / S.postings.length * 100)}% acked · ${S.postings.filter(p => p.attempt > 1).length} retried` : 'none yet';
+  $('kConf').textContent = S.stats.conflicts; $('kMcp').textContent = `${S.stats.mcpCalls} MCP tool calls`;
+}
+
+function renderFeed() {
+  const f = $('feed');
+  if (feedTab === 'postings') {
+    if (!S.postings.length) { f.innerHTML = '<div class="act mut">No postings yet. Book from any channel and the router posts BLOCKs to the other marketplaces.</div>'; return; }
+    f.innerHTML = S.postings.slice(0, 60).map(p => {
+      const isNew = !seenPostings.has(p.id); seenPostings.add(p.id);
+      const st = p.status === 'acked' ? `✓ ${p.ms}ms${p.attempt > 1 ? ' · retried' : ''}` : p.status === 'retrying' ? '↻ Retrying' : '<span class="spin"></span>';
+      return `<div class="prow ${isNew ? 'new' : ''}"><span class="pill ${p.type}">${p.type}</span>
+        <div class="w"><b>${E.chName(p.target)}</b> · ${E.dayLabel(p.day)} ${E.hLabel(p.hour)}${p.price ? ' · ' + rupee(p.price) : ''}<small>${esc(p.endpoint)} · ${esc(p.reason)}${p.ref ? ' · ' + p.ref : ''}</small></div>
+        <span class="st ${p.status}">${st}</span></div>`;
+    }).join('');
+  } else {
+    f.innerHTML = '<div class="act">' + S.events.slice(0, 80).map(e => `<div class="${e.kind}">${new Date(e.ts).toLocaleTimeString('en-IN', { hour12: false })}  ${esc(e.text)}</div>`).join('') + '</div>';
+  }
+}
+
+// ───────── WhatsApp phone ─────────
+const fmtMsg = t => esc(t).replace(/(upi:\/\/[^\s]+)/g, '<a href="#" data-pay="1">$1</a>');
+function renderChat() {
+  const chats = S.chats; if (!chats.find(c => c.phone === chatSel)) chatSel = 'sim';
+  const hasReal = chats.length > 1;
+  $('chatPicker').innerHTML = hasReal ? `<select id="chatSel">${chats.map(c => `<option value="${esc(c.phone)}" ${c.phone === chatSel ? 'selected' : ''}>${c.real ? 'Live · ' : 'Demo · '}${esc(c.name)}</option>`).join('')}</select>` : '';
+  const c = chats.find(x => x.phone === chatSel); if (!c) return;
+  $('waSub').textContent = c.real ? `Live chat with ${c.name} · bot replies on WhatsApp` : `Demo customer: ${c.name} · Business account`;
+  $('waInput').disabled = c.real; $('waInput').placeholder = c.real ? 'Live chat — the bot replies on WhatsApp' : 'Message';
+  const body = $('waBody'), last = c.msgs.length - 1;
+  const key = c.phone + ':' + c.msgs.length + ':' + c.typing;
+  if (renderChat.key === key) return; renderChat.key = key;
+  body.innerHTML = c.msgs.map((m, i) => {
+    const t = new Date(m.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    let h = `<div class="bub ${m.from}">${fmtMsg(m.text)}<span class="t">${t}${m.from === 'user' ? ' ✓✓' : ''}</span></div>`;
+    if (m.buttons?.length && i === last && !c.real) h += `<div class="wbtns">${m.buttons.map(b => `<button data-send="${esc(b.send)}">${esc(b.label)}</button>`).join('')}</div>`;
+    return h;
+  }).join('') + (c.typing ? '<div class="typing"><i></i><i></i><i></i></div>' : '');
+  body.scrollTop = body.scrollHeight;
+}
+function waSend(text) { if (!String(text).trim()) return; api('/api/wa/sim', { text, name: 'Priya' }); $('waInput').value = ''; }
+$('waForm').onsubmit = e => { e.preventDefault(); waSend($('waInput').value); };
+$('waBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-send]'); if (b) return waSend(b.dataset.send);
+  if (e.target.closest('[data-pay]')) { e.preventDefault(); waSend('paid'); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'chatSel') { chatSel = e.target.value; renderChat.key = null; renderChat(); } });
+const WA_SUGG = ['Hi', 'kal shaam 7 baje turf chahiye', 'aaj raat 9 baje slot hai?', 'kal ke slots dikhao', 'paid', 'cancel'];
+$('waSugg').innerHTML = WA_SUGG.map(s => `<button class="chip">${s}</button>`).join('');
+$('waSugg').onclick = e => { if (e.target.classList.contains('chip')) waSend(e.target.textContent); };
+const hinglish = (d, h) => `${d === 'today' ? 'aaj' : 'kal'} ${h < 12 ? 'subah' : h < 17 ? 'dopahar' : h < 20 ? 'shaam' : 'raat'} ${h % 12 || 12} baje turf chahiye`;
+
+// ───────── Grid interactions: the three booking channels ─────────
+$('grid').addEventListener('click', async e => {
+  const td = e.target.closest('td.cell'); if (!td) return;
+  const [d, hs, c] = td.dataset.k.split('|'), h = +hs, sl = S.slots[d][h];
+  if (sl.booking && (sl.booking.channel === c || sl.booking.kind === 'owner')) {
+    if (confirm(sl.booking.kind === 'owner' ? 'Remove owner block?' : `Cancel ${sl.booking.ref}?`)) api('/api/cancel', { day: d, hour: h });
+    return;
+  }
+  if (sl.booking || sl.hold) {   // race: another channel tries a sold/held slot → engine rejects it
+    const r = await api('/api/book', { day: d, hour: h, channel: c, customer: `${E.chName(c)} customer`, kind: E.ch(c).source });
+    if (!r.ok) { toast(`Double booking blocked — ${r.error === 'held' ? 'slot is on a WhatsApp payment hold' : 'already sold via ' + E.chName(r.booked_via)}`); const el = document.querySelector(`td[data-k="${td.dataset.k}"]`); if (el) { el.classList.add('flash'); } }
+    return;
+  }
+  if (E.closedFor(d, h, c)) return toast('This slot has already started');
+  if (sl.closed[c]) { api('/api/owner/actions', { actions: [{ type: 'unblock', day: d, start_hour: h, end_hour: h + 1, channels: [c] }] }); return; }
+  if (E.ch(c).marketplace) return aggBook(d, h, c);
+  if (c === 'offline') return openOffline(d, h);
+  if (c === 'whatsapp') { chatSel = 'sim'; $('waInput').value = hinglish(d, h); $('waInput').focus(); toast('WhatsApp bookings come through the chat — press Send'); }
+});
+async function aggBook(d, h, c) {
+  const r = await api('/api/book', { day: d, hour: h, channel: c, customer: `${E.chName(c)} user`, kind: 'aggregator' });
+  toast(r.ok ? `${E.chName(c)} booking ${r.booking.ref} — blocking the other marketplace` : `Rejected: ${r.error}`);
+  return r;
+}
+$('aggBtn').onclick = () => {
+  const free = E.HOURS.filter(h => { const s = S.slots[view][h]; return !s.booking && !s.hold && !E.isPast(view, h); });
+  if (!free.length) return toast('No free slots');
+  const pref = free.filter(h => E.band(h).label === 'Peak'), pool = pref.length ? pref : free;
+  aggBook(view, pool[Math.floor(Math.random() * pool.length)], Math.random() < .55 ? 'aggA' : 'aggB');
+};
+
+// Offline sheet
+let offKind = 'walkin';
+function openOffline(d = view, h = null, kind) { if (kind) offKind = kind; if (role === 'staff' && offKind === 'owner') offKind = 'walkin'; $('offDay').value = d; fillHours(h); setKind(offKind); $('offName').value = ''; $('offPhone').value = ''; $('offSheet').showModal(); }
+function fillHours(sel) {
+  const d = $('offDay').value, free = E.HOURS.filter(h => { const s = S.slots[d][h]; return !s.booking && !s.hold && !s.closed.offline && !E.isOver(d, h); });
+  $('offHour').innerHTML = free.map(h => `<option value="${h}" ${h === sel ? 'selected' : ''}>${E.hLabel(h)}</option>`).join('');
+  updOffPrice();
+}
+function setKind(k) {
+  offKind = k; document.querySelectorAll('#offKind button').forEach(b => b.classList.toggle('active', b.dataset.k === k));
+  $('fName').style.display = $('fPhone').style.display = k === 'owner' ? 'none' : ''; $('fNote').style.display = k === 'owner' ? '' : 'none';
+  $('offSave').textContent = k === 'owner' ? 'Block' : 'Add'; updOffPrice();
+}
+function updOffPrice() {
+  const d = $('offDay').value, h = +$('offHour').value; if (!h) { $('offPrice').textContent = 'No free slots on this day.'; return; }
+  $('offPrice').innerHTML = offKind === 'owner' ? 'Takes the slot off sale everywhere. BLOCK postings go to Aggregator A and Aggregator B.'
+    : `Offline price ${rupee(E.listed(S.slots[d][h], d, h, 'offline'))} · 0% commission. BLOCK postings go to Aggregator A and Aggregator B.`;
+}
+$('offKind').onclick = e => { const b = e.target.closest('button'); if (b) setKind(b.dataset.k); };
+$('offDay').onchange = () => fillHours(); $('offHour').onchange = updOffPrice;
+$('offCancel').onclick = () => $('offSheet').close();
+$('offBtn').onclick = () => openOffline();
+$('offForm').onsubmit = async e => {
+  e.preventDefault(); if (!$('offHour').value) return;
+  const body = { day: $('offDay').value, hour: +$('offHour').value, channel: 'offline', kind: offKind,
+    customer: offKind === 'owner' ? 'Owner' : ($('offName').value || (offKind === 'walkin' ? 'Walk-in' : 'Phone booking')),
+    phone: $('offPhone').value || null, note: offKind === 'owner' ? $('offNote').value : (offKind === 'phone' ? 'phone call' : 'walk-in') };
+  const r = await api('/api/book', body); $('offSheet').close();
+  toast(r.ok ? (offKind === 'owner' ? 'Owner block added — marketplaces blocked' : `Offline booking ${r.booking.ref} — marketplaces blocked`) : `Rejected: ${r.error}`);
+};
+
+document.querySelectorAll('#days button').forEach(b => b.onclick = () => { view = b.dataset.day; render(); });
+$('feedTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; feedTab = b.dataset.f; document.querySelectorAll('#feedTabs button').forEach(x => x.classList.toggle('active', x === b)); renderFeed(); };
+$('resetBtn').onclick = () => { api('/api/reset'); $('reasons').innerHTML = '<div class="mut">Tap Optimise to reprice free slots per channel.</div>'; $('reply').style.display = 'none'; seenPostings = new Set(); renderChat.key = null; };
+setInterval(() => { if (S && E.DAYS.some(d => E.HOURS.some(h => S.slots[d][h].hold))) role === 'staff' ? renderCalendar() : renderGrid(); }, 1000);
+setInterval(() => { if (S && role === 'staff') renderStaff(); }, 30000); // keep the now-line and 'in N min' fresh
+
+// ───────── AI pricing ─────────
+const OPT_SYSTEM = `You are a revenue manager for a 5-a-side football turf in Bengaluru, India.
+Channels and commission: whatsapp (0%, direct), aggA (20%), aggB (15%), offline (0%, walk-in).
+Goal: maximise NET revenue to the venue and fill empty slots. Rules:
+- Only change FREE slots. Never touch booked or held slots.
+- Prices: multiples of 10, max ${E.CEIL} INR, net-to-venue at least ${E.NET_FLOOR} INR, within ±30% of the current price.
+- Push demand to whatsapp (zero commission): keep whatsapp the cheapest or equal-cheapest channel in peak slots.
+- Free peak slots can carry a premium on aggregators to recover commission. Free off-peak slots get discounts (bigger on whatsapp).
+- Return at most 10 changes, each with a short, specific reason (max 15 words).
+Respond with ONLY JSON: {"changes":[{"day":"today|tomorrow","hour":<6-22>,"channel":"whatsapp|aggA|aggB|offline","new_price":<int>,"reason":"..."}],"summary":"one sentence"}`;
+function snapshotForAI() {
+  const out = {};
+  for (const d of E.DAYS) out[d] = { weekend: E.isWeekend(d), slots: E.HOURS.map(h => { const sl = S.slots[d][h];
+    const st = sl.booking ? 'booked' : sl.hold ? 'held' : 'free';
+    return { hour: h, band: E.band(h).label, status: st, prices: st === 'free' ? Object.fromEntries(E.CH_IDS.filter(c => !sl.closed[c]).map(c => [c, E.listed(sl, d, h, c)])) : undefined }; }) };
+  return out;
+}
+function fallbackOptimise() {
+  const off = [], peak = [];
+  for (const d of [view, ...E.DAYS.filter(x => x !== view)]) for (const h of E.HOURS) {
+    const sl = S.slots[d][h]; if (sl.booking || sl.hold || E.isPast(d, h)) continue; const b = E.band(h).label, base = E.rulePrice(d, h);
+    if (b === 'Off-peak') { off.push({ day: d, hour: h, channel: 'whatsapp', new_price: base * .8, reason: 'Off-peak: 20% off on WhatsApp to fill with zero commission' });
+      off.push({ day: d, hour: h, channel: 'aggB', new_price: base * .9, reason: 'Discovery at 10% off; 15% commission beats an empty slot' }); }
+    else if (b === 'Peak') peak.push({ day: d, hour: h, channel: 'aggA', new_price: base * 1.15, reason: 'Peak demand: +15% on Aggregator A recovers its 20% commission' });
+  }
+  return { changes: [...off.slice(0, 6), ...peak.slice(0, 4)], summary: 'Rule-based: discount dead slots, premium on high-commission marketplaces at peak.' };
+}
+function extractJSON(text) {
+  text = String(text).replace(/<think>[\s\S]*?<\/think>/g, '').replace(/```json|```/g, '');
+  const a = text.indexOf('{'), b = text.lastIndexOf('}'); if (a < 0 || b < a) throw new Error('No JSON'); return JSON.parse(text.slice(a, b + 1));
+}
+async function aiChat(system, user) {
+  const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, user }), signal: AbortSignal.timeout(8000) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error); return j.content;
+}
+$('optBtn').onclick = async () => {
+  const btn = $('optBtn'); btn.innerHTML = '<span class="spin"></span> Thinking…'; btn.disabled = true;
+  let res, src = 'Sarvam AI';
+  try { if (!aiOnline) throw 0; res = extractJSON(await aiChat(OPT_SYSTEM, 'Current inventory:\n' + JSON.stringify(snapshotForAI()))); if (!Array.isArray(res.changes)) throw 0; }
+  catch { src = 'Fallback rules'; res = fallbackOptimise(); }
+  const r = await api('/api/pricing/apply', { changes: res.changes, source: src });
+  $('reasons').innerHTML = `<div class="ai"><b>${src}</b>: ${esc(res.summary || '')} (${r.applied.length} applied${r.rejected ? `, ${r.rejected} rejected by guardrails` : ''})</div>` +
+    r.applied.map(x => `<div><b>${E.dayLabel(x.day)} ${E.hLabel(x.hour)} · ${E.chName(x.channel)}</b>: ${rupee(x.old)} → <b class="${x.new < x.old ? 'ok' : 'ai'}">${rupee(x.new)}</b><br><span class="mut">${esc(x.reason)}</span></div>`).join('');
+  btn.innerHTML = I.spark + 'Optimise'; btn.disabled = false;
+};
+
+// ───────── Owner commands ─────────
+const CMD_SYSTEM = `You convert a sports-venue owner's command (Hindi, Hinglish or English) into JSON actions.
+Channels: whatsapp ("direct"/"WhatsApp"), aggA ("Aggregator A"), aggB ("Aggregator B"), offline ("walk-in"/"counter"). "all" = every channel.
+Days: "today" (aaj) or "tomorrow" (kal — always tomorrow). Hours are 24h integers 6..23, start inclusive, end exclusive. "shaam 7" = 19, "raat 9" = 21, "subah 7" = 7, "dopahar 3" = 15. A bare hour 1-11 without subah/morning/am means PM. A single hour "7 baje" means 19 to 20.
+Action types: block (stop selling), unblock (reopen), book (exactly one channel), set_discount (value = percent 1-50), set_price (value = INR), clear (remove discount/price override).
+Respond ONLY with JSON: {"actions":[{"type":"...","day":"today|tomorrow","start_hour":<int>,"end_hour":<int>,"channels":["whatsapp"|"aggA"|"aggB"|"offline"|"all"],"value":<number|null>}],"reply_hi":"short confirmation in Hindi (Devanagari)"}
+If unclear, return {"actions":[],"reply_hi":"<ask for clarification in Hindi>"}.`;
+function fallbackParse(t) {
+  const s = t.toLowerCase();
+  const day = /kal|tomorrow|कल/.test(s) ? 'tomorrow' : 'today';
+  const am = /subah|morning|\bam\b|सुबह/.test(s);
+  const pct = (s.match(/(\d+)\s*(%|percent)/) || [])[1];
+  const nums = (s.match(/\d+(?=\s*(?:baje|bje|बजे|am|pm|se|to|tak|-|–|\s|$))/g) || []).map(Number).filter(n => n <= 23 && String(n) !== pct);
+  const hrs = nums.map(n => (!am && n >= 1 && n <= 11) ? n + 12 : n);
+  let start = hrs[0] ?? 18, end = hrs[1] ?? start + 1; if (end <= start) end = start + 1;
+  const channels = [];
+  if (/direct|whatsapp/.test(s)) channels.push('whatsapp');
+  if (/aggregator\s*a\b|agg\s*a\b/.test(s)) channels.push('aggA');
+  if (/aggregator\s*b\b|agg\s*b\b/.test(s)) channels.push('aggB');
+  if (/walk|offline|counter/.test(s)) channels.push('offline');
+  if (!channels.length) channels.push('all');
+  let type = 'block';
+  if (/clear|hatao|हटाओ/.test(s)) type = 'clear'; else if (/discount|chhoot|off|%|छूट/.test(s)) type = 'set_discount';
+  else if (/khol|open|unblock|chalu|खोल/.test(s)) type = 'unblock'; else if (/book/.test(s)) type = 'book'; else if (/price|daam|rate|₹|rs/.test(s)) type = 'set_price';
+  const value = type === 'set_discount' ? +(pct || 10) : type === 'set_price' ? +((s.match(/(?:₹|rs\.?\s*)(\d+)/) || [])[1] || 1000) : null;
+  return { actions: [{ type, day, start_hour: start, end_hour: end, channels, value }], reply_hi: null };
+}
+const HI = { clear: 'से छूट हटा दी', block: 'बंद कर दिए', unblock: 'फिर से खोल दिए', set_discount: 'पर छूट लगा दी', set_price: 'का दाम बदल दिया', book: 'बुक कर दिए' };
+const hindiReply = a => !a.length ? 'माफ़ कीजिए, कमांड समझ नहीं आई।' : `ठीक है, ${a[0].day === 'tomorrow' ? 'कल' : 'आज'} ${a[0].start_hour} से ${a[0].end_hour} बजे तक के स्लॉट ${HI[a[0].type] || 'अपडेट कर दिए'}। सभी मार्केटप्लेस पर पोस्ट हो गया।`;
+async function runCommand() {
+  const text = $('cmd').value.trim(); if (!text) return;
+  const btn = $('runBtn'); btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  let res, src = 'Sarvam AI';
+  try { if (!aiOnline) throw 0; res = extractJSON(await aiChat(CMD_SYSTEM, text)); if (!Array.isArray(res.actions)) throw 0; }
+  catch { src = 'Fallback parser'; res = fallbackParse(text); }
+  const r = await api('/api/owner/actions', { actions: res.actions });
+  const reply = res.reply_hi || hindiReply(res.actions);
+  $('reply').style.display = 'block';
+  $('reply').innerHTML = `<b>${esc(reply)}</b><div class="mut" style="margin-top:4px;font-size:12px">${src} · ${r.done.map(esc).join('<br>') || 'no changes'}${r.rejected.length ? '<br>Skipped: ' + r.rejected.map(esc).join('; ') : ''}</div>`;
+  btn.innerHTML = 'Run'; btn.disabled = false;
+  if ($('speak').checked) speak(reply);
+}
+async function speak(text) {
+  try { if (!aiOnline) throw 0; const j = await api('/api/tts', { text }); if (!j.audio) throw 0; await new Audio('data:audio/wav;base64,' + j.audio).play(); }
+  catch { try { const u = new SpeechSynthesisUtterance(text); u.lang = 'hi-IN'; speechSynthesis.speak(u); } catch {} }
+}
+let rec, chunks = [];
+async function toggleMic() {
+  const btn = $('micBtn');
+  if (rec && rec.state === 'recording') { rec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    rec = new MediaRecorder(stream); chunks = [];
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop()); btn.classList.remove('rec'); btn.innerHTML = '<span class="spin"></span>';
+      try { const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        const r = await fetch('/api/stt', { method: 'POST', body: blob, headers: { 'Content-Type': blob.type } }); const j = await r.json(); if (!r.ok) throw new Error(j.error);
+        $('cmd').value = j.transcript; btn.innerHTML = I.mic + 'Speak'; if (j.transcript) runCommand(); }
+      catch { toast('Mic transcription failed — type the command'); btn.innerHTML = I.mic + 'Speak'; }
+    };
+    rec.start(); btn.classList.add('rec'); btn.innerHTML = I.stop + 'Stop';
+  } catch { toast('Mic unavailable'); }
+}
+const EXAMPLES = ['kal shaam 7 se 9 Aggregator B pe band karo', 'aaj dopahar 12 se 4 whatsapp pe 20% discount do', 'आज रात 9 बजे सब चैनल पर बंद करो'];
+$('examples').innerHTML = EXAMPLES.map(x => `<button class="chip">${x}</button>`).join('');
+$('examples').onclick = e => { if (e.target.classList.contains('chip')) $('cmd').value = e.target.textContent; };
+$('runBtn').onclick = runCommand; $('micBtn').onclick = toggleMic;
+$('cmd').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runCommand(); } });
+document.addEventListener('keydown', e => {
+  if (/TEXTAREA|INPUT|SELECT/.test(e.target.tagName) || $('offSheet').open) return;
+  if (role === 'staff' || $('bkSheet').open) return;
+  if (e.key === 'r' || e.key === 'R') $('resetBtn').click();
+  if (e.key === 'o' || e.key === 'O') { aiForcedOff = !aiForcedOff; render(); toast(aiForcedOff ? 'Offline mode on' : 'Offline mode off'); }
+});
+
+if (location.hash === '#tomorrow') view = 'tomorrow';
+// ═════════════════════════ Roles: Owner / Staff ═════════════════════════
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const roleParam = new URLSearchParams(location.search).get('role');   // ?role=staff → bookmarkable front-desk link
+let role = (roleParam || store.get('turfos.role')) === 'staff' ? 'staff' : 'owner';
+function setRole(r) {
+  role = r; store.set('turfos.role', r);
+  document.body.classList.toggle('staff', r === 'staff');
+  $('ownerView').hidden = r === 'staff'; $('staffView').hidden = r !== 'staff';
+  document.querySelectorAll('#roleSw button').forEach(b => { b.classList.toggle('active', b.dataset.role === r); b.setAttribute('aria-selected', b.dataset.role === r); });
+  $('subtitle').textContent = r === 'staff' ? 'Kickoff Arena, Koramangala · Front desk' : 'Kickoff Arena, Koramangala · 5-a-side · One inventory, every channel';
+  renderChat.key = null; threadKey = null; render();
+}
+$('roleSw').onclick = e => { const b = e.target.closest('button'); if (b) setRole(b.dataset.role); };
+
+// ───────── Time helpers (calendar works off the real clock) ─────────
+const ROW_H = 58;
+const nowFrac = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+const hShort = h => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+const isPast = E.isOver;   // front desk: a slot is past once it has ended
+const isLive = (d, h) => d === 'today' && h <= nowFrac() && nowFrac() < h + 1;
+function rel(d, h) {
+  if (d !== 'today') return 'Tomorrow';
+  const m = Math.round((h - nowFrac()) * 60);
+  if (m <= 0 && m > -60) return 'Playing now';
+  if (m < 0) return 'Done';
+  if (m < 60) return `in ${m} min`;
+  return `in ${Math.floor(m / 60)}h ${m % 60 ? (m % 60) + 'm' : ''}`.trim();
+}
+const SRC_LABEL = c => c === 'whatsapp' ? 'WhatsApp' : c === 'offline' ? 'Walk-in / phone' : E.chName(c) + ' app';
+function payLine(b) {
+  if (b.kind === 'owner') return b.note || 'Owner block';
+  if (b.channel === 'offline') return `Collect ${rupee(b.price)} at desk`;
+  if (b.channel === 'whatsapp') return `Paid ${rupee(b.price)} · UPI`;
+  return `Paid on ${E.chName(b.channel)}`;
+}
+const realPhone = p => p && /\d{6,}/.test(p.replace(/\D/g, '')) ? p : null;
+const chatOf = phone => phone && S.chats.find(c => c.phone === phone);
+function statusChip(b, d, h) {
+  if (b.status === 'arrived') return '<span class="st-chip arrived">✓ In</span>';
+  if (b.status === 'no_show') return '<span class="st-chip no_show">No-show</span>';
+  if (isLive(d, h)) return '<span class="st-chip now">Now</span>';
+  if (d === 'today' && h - nowFrac() > 0 && h - nowFrac() <= 1) return `<span class="st-chip soon">${rel(d, h)}</span>`;
+  return '';
+}
+
+// ───────── Staff render ─────────
+function renderStaff() { renderStaffStats(); renderCalendar(); renderDesk(); renderInbox(); }
+
+function todaysBookings() {
+  return E.HOURS.map(h => ({ d: 'today', h, b: S.slots.today[h].booking })).filter(x => x.b && x.b.kind !== 'owner');
+}
+function renderStaffStats() {
+  const t = todaysBookings(), now = nowFrac();
+  const next = [...t.filter(x => x.b.status === 'booked' && x.h + 1 > now),
+                ...E.HOURS.map(h => ({ d: 'tomorrow', h, b: S.slots.tomorrow[h].booking })).filter(x => x.b && x.b.kind !== 'owner')][0];
+  $('sNext').textContent = next ? `${hShort(next.h)} · ${next.b.customer}` : 'None';
+  $('sNextSub').textContent = next ? `${rel(next.d, next.h)} · ${SRC_LABEL(next.b.channel)}` : 'No upcoming bookings';
+  $('sToday').textContent = t.length;
+  $('sTodaySub').textContent = `${t.filter(x => x.h + 1 > now).length} still to play · ${E.HOURS.filter(h => !S.slots.today[h].booking && !S.slots.today[h].hold && h + 1 > now).length} slots free`;
+  const inn = t.filter(x => x.b.status === 'arrived').length, ns = t.filter(x => x.b.status === 'no_show').length;
+  $('sIn').textContent = inn; $('sInSub').textContent = ns ? `${ns} no-show` : 'No no-shows';
+  const q = S.chats.filter(c => c.needsHuman);
+  $('sQ').textContent = q.length; $('sQSub').textContent = q.length ? q.map(c => c.name).join(', ') : 'All caught up';
+}
+
+function renderCalendar() {
+  const now = nowFrac(), t = Date.now();
+  let html = '<div class="ch"></div>' + E.DAYS.map(d => {
+    const n = E.HOURS.filter(h => S.slots[d][h].booking && S.slots[d][h].booking.kind !== 'owner').length;
+    return `<div class="ch">${E.dayLabel(d)} · ${E.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}<small>${n} booking${n === 1 ? '' : 's'}</small></div>`;
+  }).join('');
+  for (const h of E.HOURS) {
+    html += `<div class="tl">${hShort(h)}</div>`;
+    for (const d of E.DAYS) {
+      const sl = S.slots[d][h], b = sl.booking, hd = sl.hold;
+      const line = d === 'today' && Math.floor(now) === h ? `<div class="nowline" style="top:${(now - h) * ROW_H}px"></div>` : '';
+      let inner;
+      if (b && b.kind === 'owner') inner = `<div class="ev block" data-d="${d}" data-h="${h}"><div class="nm">${I.wrench} Blocked</div><div class="mt">${esc(b.note || 'Owner block')}</div></div>`;
+      else if (b) inner = `<div class="ev ${b.status || ''}" style="--src:${SRC_COLOR[b.channel]}" data-d="${d}" data-h="${h}">
+          <div class="nm">${esc(b.customer)} ${statusChip(b, d, h)}</div>
+          <div class="mt">${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</div></div>`;
+      else if (hd) { const left = Math.max(0, Math.round((hd.expires - t) / 1000));
+        inner = `<div class="ev hold" data-d="${d}" data-h="${h}"><div class="nm">${esc(hd.customer)} <span class="st-chip soon">${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}</span></div><div class="mt">Paying on WhatsApp · ${rupee(hd.price)}</div></div>`; }
+      else if (isPast(d, h)) inner = `<div class="free x">—</div>`;
+      else if (sl.closed.offline) inner = `<div class="free x">Closed by owner</div>`;
+      else inner = `<div class="free" data-free="${d}|${h}"><span>Free</span><span class="plus">+ Walk-in</span></div>`;
+      html += `<div class="cc ${isPast(d, h) ? 'past' : ''}">${line}${inner}</div>`;
+    }
+  }
+  $('cal').innerHTML = html;
+}
+$('cal').addEventListener('click', e => {
+  const f = e.target.closest('[data-free]'); if (f) { const [d, h] = f.dataset.free.split('|'); return openOffline(d, +h, 'walkin'); }
+  const ev = e.target.closest('.ev'); if (ev) openBooking(ev.dataset.d, +ev.dataset.h);
+});
+
+function renderDesk() {
+  const now = nowFrac(), t = todaysBookings();
+  const up = t.filter(x => x.b.status === 'booked' && x.h + 1 > now).slice(0, 5);
+  $('upNext').innerHTML = up.length ? up.map(({ d, h, b }) => `
+    <div class="item"><div class="when">${hShort(h)}<small>${rel(d, h)}</small></div>
+      <div class="who"><b>${esc(b.customer)}</b><small>${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</small></div>
+      <div class="btns">${h <= now ? `<button class="gray" data-st="no_show" data-h="${h}">No-show</button>` : ''}<button class="go" data-st="arrived" data-h="${h}">Check in</button></div></div>`).join('')
+    : '<div class="empty">No more arrivals today.</div>';
+  const on = t.filter(x => x.b.status === 'arrived' && x.h + 1 > now);
+  $('onTurf').innerHTML = on.length ? on.map(({ d, h, b }) => `
+    <div class="item"><div class="when">${hShort(h)}<small>till ${hShort(h + 1)}</small></div>
+      <div class="who"><b>${esc(b.customer)}</b><small>Checked in ${b.statusAt ? new Date(b.statusAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</small></div>
+      <div class="btns"><button class="gray" data-st="booked" data-h="${h}">Undo</button></div></div>`).join('')
+    : '<div class="empty">Nobody checked in yet.</div>';
+  const free = E.HOURS.filter(h => { const sl = S.slots.today[h]; return h + 1 > now && !sl.booking && !sl.hold && !sl.closed.offline; });
+  $('freeToday').innerHTML = free.length ? free.map(h => `<button class="chip" data-fh="${h}"><b>${hShort(h)}</b> · ${rupee(E.listed(S.slots.today[h], 'today', h, 'offline'))}</button>`).join('')
+    : '<div class="empty">Fully booked for today.</div>';
+}
+async function setBkStatus(d, h, st) {
+  const r = await api('/api/booking/status', { day: d, hour: h, status: st });
+  if (r.ok) toast(st === 'arrived' ? 'Checked in ✓' : st === 'no_show' ? 'Marked as no-show' : 'Status reset');
+}
+$('upNext').onclick = $('onTurf').onclick = e => { const b = e.target.closest('[data-st]'); if (b) setBkStatus('today', +b.dataset.h, b.dataset.st); };
+$('freeToday').onclick = e => { const b = e.target.closest('[data-fh]'); if (b) openOffline('today', +b.dataset.fh, 'walkin'); };
+$('qWalk').onclick = () => openOffline('today', null, 'walkin');
+$('qPhone').onclick = () => openOffline('today', null, 'phone');
+
+// ───────── Booking detail sheet ─────────
+let bkOpen = null;
+function openBooking(d, h) { bkOpen = { d, h }; renderBooking(); if (!$('bkSheet').open) $('bkSheet').showModal(); }
+function renderBooking() {
+  if (!bkOpen) return; const { d, h } = bkOpen, sl = S.slots[d][h], b = sl.booking, hd = sl.hold;
+  $('bkTitle').textContent = `${E.dayLabel(d)} · ${E.hLabel(h)}`;
+  if (!b && !hd) { $('bkBody').innerHTML = '<div class="empty">This slot is free now.</div>'; return; }
+  if (!b) { $('bkBody').innerHTML = `<div class="kv"><span>Customer</span><b>${esc(hd.customer)}</b><span>Status</span><b>Paying on WhatsApp (${hd.ref})</b><span>Amount</span><b>${rupee(hd.price)}</b></div>
+      <div class="note">The slot is held for this customer until they pay. It's blocked on the apps meanwhile.</div>`; return; }
+  const phone = realPhone(b.phone), chat = chatOf(b.phone), st = b.status || 'booked';
+  const owner = b.kind === 'owner';
+  $('bkBody').innerHTML = `<div class="kv">
+      <span>Customer</span><b>${esc(b.customer)}</b>
+      ${phone ? `<span>Phone</span><b>${esc(phone)}</b>` : ''}
+      <span>Booked via</span><b>${owner ? 'Owner' : SRC_LABEL(b.channel)}${b.kind === 'phone' ? ' (phone call)' : ''}</b>
+      <span>Reference</span><b>${esc(b.ref)}</b>
+      <span>Payment</span><b>${esc(payLine(b))}</b>
+      ${owner ? '' : `<span>Status</span><b>${{ booked: isLive(d, h) ? 'Expected now' : 'Upcoming', arrived: '✓ Checked in', no_show: 'No-show' }[st]}</b>`}
+    </div>
+    ${owner ? '<div class="note">Blocked by the owner. Only the owner can remove it.</div>' : `
+    <div class="acts">
+      ${st !== 'arrived' ? `<button class="go" data-a="arrived">Check in</button>` : ''}
+      ${st === 'booked' && !isPast(d, h) && d === 'today' && h <= nowFrac() ? `<button class="gray" data-a="no_show">No-show</button>` : ''}
+      ${st !== 'booked' ? `<button class="gray" data-a="booked">Undo</button>` : ''}
+    </div>
+    <div class="acts">
+      ${chat ? `<button data-a="chat">Open WhatsApp chat</button>` : ''}
+      ${phone ? `<button class="gray" data-a="call">Call</button>` : ''}
+      <button class="danger" data-a="cancel">Cancel booking</button>
+    </div>`}`;
+}
+$('bkBody').onclick = async e => {
+  const a = e.target.closest('[data-a]')?.dataset.a; if (!a || !bkOpen) return; const { d, h } = bkOpen, b = S.slots[d][h].booking;
+  if (['arrived', 'no_show', 'booked'].includes(a)) return setBkStatus(d, h, a);
+  if (a === 'chat') { $('bkSheet').close(); staffChat = b.phone; inboxTab = 'all'; threadKey = null; renderInbox(); $('replyInput').focus(); return; }
+  if (a === 'call') { location.href = 'tel:' + realPhone(b.phone).replace(/[^\d+]/g, ''); return; }
+  if (a === 'cancel' && confirm(`Cancel ${b.ref} for ${b.customer}? The slot reopens on every channel.`)) { await api('/api/cancel', { day: d, hour: h }); $('bkSheet').close(); toast(`Cancelled ${b.ref}`); }
+};
+$('bkClose').onclick = () => $('bkSheet').close();
+$('bkSheet').addEventListener('close', () => { bkOpen = null; });
+
+// ───────── WhatsApp query inbox ─────────
+let staffChat = null, inboxTab = 'need', threadKey = null;
+const CANNED = ['Haan, free parking hai 🚗', 'Shoes ₹50 mein rent pe milte hain 👟', 'Bibs aur ball desk pe free milenge ⚽', 'Thoda wait kijiye, check karke batata hoon 🙏'];
+function renderInbox() {
+  const all = [...S.chats].sort((a, b) => (b.needsHuman - a.needsHuman) || (b.lastTs - a.lastTs));
+  const list = inboxTab === 'need' ? all.filter(c => c.needsHuman || c.unread) : all;
+  const need = all.filter(c => c.needsHuman).length;
+  $('inboxAside').textContent = `${all.length} chat${all.length === 1 ? '' : 's'}`;
+  document.querySelectorAll('#inboxTabs button').forEach(b => { b.classList.toggle('active', b.dataset.t === inboxTab); if (b.dataset.t === 'need') b.textContent = `Needs reply${need ? ' · ' + need : ''}`; });
+  if (!staffChat || !S.chats.find(c => c.phone === staffChat)) staffChat = (list[0] || all[0])?.phone || null;
+  $('inbox').innerHTML = list.length ? list.map(c => {
+    const last = c.msgs[c.msgs.length - 1];
+    const when = c.lastTs ? new Date(c.lastTs).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="conv ${c.phone === staffChat ? 'sel' : ''}" data-p="${esc(c.phone)}"><div class="avatar">${esc(c.name.slice(0, 2).toUpperCase())}</div>
+      <div><b>${esc(c.name)}${c.real ? ' · live' : ''}</b><small>${last ? (last.from === 'user' ? '' : last.from === 'staff' ? 'You: ' : 'Bot: ') + esc(last.text.split('\n')[0]) : 'No messages'}</small></div>
+      <div class="r">${when}${c.unread ? `<span class="unread">${c.unread}</span>` : ''}${c.needsHuman ? '<span class="flag">Needs reply</span>' : c.human ? '<span class="flag">You</span>' : ''}</div></div>`;
+  }).join('') : '<div class="empty">No queries waiting. The bot handled everything. 🎉</div>';
+  renderThread();
+}
+function renderThread() {
+  const c = S.chats.find(x => x.phone === staffChat);
+  $('threadWrap').hidden = !c; if (!c) return;
+  $('thead').innerHTML = `<div class="avatar" style="width:30px;height:30px;font-size:12px">${esc(c.name.slice(0, 2).toUpperCase())}</div><div><b>${esc(c.name)}</b><div class="mut" style="font-size:12px">${c.human ? 'You are replying · bot paused' : 'Bot is answering bookings'}</div></div>
+    <span style="flex:1"></span>
+    ${c.needsHuman ? '<button class="gray" id="resolveBtn" style="min-height:30px;font-size:13px">Mark done</button>' : ''}
+    <label class="switch" style="margin-left:6px" title="When off, the bot stops replying and you handle this chat">Bot <input type="checkbox" id="botSw" ${c.human ? '' : 'checked'}></label>`;
+  const key = c.phone + ':' + c.msgs.length + ':' + c.typing;
+  if (threadKey !== key) {
+    threadKey = key;
+    $('thread').innerHTML = c.msgs.map(m => {
+      const t = new Date(m.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      const by = m.from === 'user' ? '' : `<span class="by">${m.from === 'staff' ? 'Front desk' : 'Bot'}</span>`;
+      return `<div class="bub ${m.from}${m.from === 'bot' ? ' mine' : ''}">${by}${esc(m.text)}<span class="t">${t}</span></div>`;
+    }).join('') + (c.typing ? '<div class="typing"><i></i><i></i><i></i></div>' : '');
+    $('thread').scrollTop = $('thread').scrollHeight;
+  }
+  $('canned').innerHTML = CANNED.map(x => `<button class="chip">${esc(x)}</button>`).join('');
+  if (c.unread && !$('staffView').hidden && renderThread.read !== key) { renderThread.read = key; api('/api/wa/read', { phone: c.phone }); }
+}
+$('inbox').onclick = e => { const r = e.target.closest('[data-p]'); if (r) { staffChat = r.dataset.p; threadKey = null; renderInbox(); } };
+$('inboxTabs').onclick = e => { const b = e.target.closest('button'); if (b) { inboxTab = b.dataset.t; renderInbox(); } };
+$('canned').onclick = e => { if (e.target.classList.contains('chip')) { $('replyInput').value = e.target.textContent; $('replyInput').focus(); } };
+$('replyForm').onsubmit = e => { e.preventDefault(); const text = $('replyInput').value.trim(); if (!text || !staffChat) return; api('/api/wa/reply', { phone: staffChat, text }); $('replyInput').value = ''; };
+$('thead').addEventListener('change', e => { if (e.target.id === 'botSw') api('/api/wa/takeover', { phone: staffChat, on: !e.target.checked }); });
+$('thead').addEventListener('click', e => { if (e.target.id === 'resolveBtn') api('/api/wa/resolve', { phone: staffChat }); });
+
+setRole(role);
+
+connect();
+
+// Stage backup: http://localhost:3000/#autoplay runs all three channels hands-free
+if (location.hash === '#autoplay') {
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  (async () => {
+    await wait(600); await api('/api/reset'); await wait(600); view = 'tomorrow'; render();
+    await aggBook('tomorrow', 18, 'aggA'); await wait(1500);                                                   // 1. aggregator booking
+    await api('/api/book', { day: 'tomorrow', hour: 18, channel: 'offline', kind: 'walkin', customer: 'Walk-in' }); await wait(1200); //    race → blocked
+    waSend('kal shaam 7 baje turf chahiye'); await wait(4500);                                                  // 2. WhatsApp → hold
+    waSend('paid'); await wait(2500);                                                                           //    confirm
+    await api('/api/book', { day: 'tomorrow', hour: 9, channel: 'offline', kind: 'walkin', customer: 'Arjun', note: 'walk-in' }); await wait(1200); // 3. offline
+    await api('/api/book', { day: 'tomorrow', hour: 10, channel: 'offline', kind: 'owner', customer: 'Owner', note: 'Maintenance' });
+  })();
+}
+</script>
+</body>
+</html>
