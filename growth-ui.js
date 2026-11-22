@@ -1,5 +1,9 @@
 // Customers & Growth tab (owner). Uses globals from index.html: S, E, $, api, toast, esc, rupee, logo.
 (function () {
+  // Every send goes through a confirmation modal (confirmModal from index.html).
+  const GS = () => (typeof S !== 'undefined' && S && S.growth) || {};
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const ask = o => (window.confirmModal ? confirmModal(o) : Promise.resolve(window.confirm(o.title)));
   const GI = {
     users: '<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3.3 3.1-6 7-6s7 2.7 7 6v1H2zm15.5-6c2.8.3 4.5 2.4 4.5 5v2h-4v-1c0-2.4-.9-4.5-2.5-6z"/>',
     trophy: '<path d="M7 3h10v2h4v3a5 5 0 0 1-4.6 5A5 5 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A5 5 0 0 1 7.6 13 5 5 0 0 1 3 8V5h4zm0 4H5v1a3 3 0 0 0 2 2.8zm10 0v3.8A3 3 0 0 0 19 8V7z"/>',
@@ -161,6 +165,8 @@
       $('psort').value = sortBy; $('psort').onchange = e => { sortBy = e.target.value; render(); };
       $('ptb').addEventListener('click', async e => {
         const b = e.target.closest('[data-nudge]'); if (!b) return;
+        const pl = (GS().players || []).find(p => p.phone === b.dataset.nudge);
+        if (!await ask({ title: `Send a WhatsApp nudge to ${pl ? esc(pl.name) : 'this player'}?`, body: 'They get a personal message now, with an offer if a discount rule matches them.', ok: 'Send nudge' })) return;
         b.disabled = true; const r = await api('/api/growth/nudge/player', { phone: b.dataset.nudge }); toast(r.ok ? `WhatsApp nudge sent · ${r.rule}` : r.error);
       });
     },
@@ -174,6 +180,7 @@
         e.preventDefault();
         const body = { type, name: $('evName').value, format: $('evFormat').value, day: $('evDay').value, start: +$('evStart').value, end: +$('evEnd').value,
           teamsMax: +$('evTeams').value, fee: +$('evFee').value, prize: $('evPrize').value, segs: picked($('evForm').querySelector('.segpick')) };
+        if (!await ask({ title: `Create "${esc(body.name)}"?`, body: `${esc(type)} · ${body.day === 'tomorrow' ? 'Tomorrow' : 'Today'} ${E.hLabel(body.start)} to ${E.hLabel(body.end)}. These slots are blocked on every marketplace and WhatsApp invites go out to the selected segments right away.`, ok: 'Create and send invites' })) return;
         const r = await api('/api/growth/tournament/create', body);
         toast(r.ok ? `${type} created — slots blocked, invites going out on WhatsApp` : r.error);
       };
@@ -182,7 +189,9 @@
     discounts() {
       $('rPct').oninput = e => $('rPctL').textContent = e.target.value + '%';
       $('rGrid').addEventListener('click', async e => {
-        const run = e.target.closest('[data-run]'); if (run) { run.disabled = true; const r = await api('/api/growth/rule/run', { id: run.dataset.run }); toast(r.ok ? `${r.sent} personal offers sent on WhatsApp` : r.error); }
+        const run = e.target.closest('[data-run]'); if (run) { const ru = (GS().rules || []).find(x => x.id === run.dataset.run);
+          if (!await ask({ title: `Send "${esc(ru ? ru.name : 'this offer')}" now?`, body: `${ru ? plural(ru.audience, 'player') + ' get' : 'Matching players get'} a personal ${ru ? ru.pct + '% ' : ''}WhatsApp offer right away.`, ok: 'Send offers' })) return;
+          run.disabled = true; const r = await api('/api/growth/rule/run', { id: run.dataset.run }); toast(r.ok ? `${r.sent} personal offers sent on WhatsApp` : r.error); }
       });
       $('rGrid').addEventListener('change', e => { if (e.target.dataset.toggle) api('/api/growth/rule/toggle', { id: e.target.dataset.toggle, on: e.target.checked }); });
       $('rForm').onsubmit = async e => { e.preventDefault();
@@ -190,7 +199,10 @@
         toast(r.ok ? 'Rule added' : r.error); $('rName').value = ''; };
     },
     nudges() {
-      $('aList').addEventListener('click', async e => { const b = e.target.closest('[data-arun]'); if (!b) return; b.disabled = true;
+      $('aList').addEventListener('click', async e => { const b = e.target.closest('[data-arun]'); if (!b) return;
+        const au = (GS().autos || []).find(x => x.id === b.dataset.arun);
+        if (!await ask({ title: `Run "${esc(au ? au.name : 'this nudge')}" now?`, body: `${au ? (au.ruleId ? 'Up to ' : '') + plural(au.audience, 'player') : 'Matching players'} get this WhatsApp message now instead of at the next scheduled time.${au && au.ruleId ? ' Players who already have a live offer are skipped.' : ''}`, ok: 'Send now' })) return;
+        b.disabled = true;
         const r = await api('/api/growth/auto/run', { id: b.dataset.arun }); toast(r.ok ? `Nudge sent to ${r.sent} players` : r.error); });
       $('aList').addEventListener('change', e => { if (e.target.dataset.atoggle) api('/api/growth/auto/toggle', { id: e.target.dataset.atoggle, on: e.target.checked }); });
       $('aForm').onsubmit = async e => { e.preventDefault();
@@ -249,9 +261,12 @@
         $('evList').dataset.bound = 1;
         $('evList').addEventListener('click', async e => {
           const b = e.target.closest('button'); if (!b) return;
+          const ev = (GS().tournaments || []).find(t => t.id === (b.dataset.inv || b.dataset.rem || b.dataset.cx)), evName = ev ? `"${esc(ev.name)}"` : 'this event';
+          if (b.dataset.inv && !await ask({ title: `Send more invites for ${evName}?`, body: 'Players in the event segments who have not been invited yet get a WhatsApp invite now.', ok: 'Send invites' })) return;
+          if (b.dataset.rem && !await ask({ title: `Send a reminder for ${evName}?`, body: 'Every registered team captain gets a WhatsApp reminder now.', ok: 'Send reminder' })) return;
           if (b.dataset.inv) { const r = await api('/api/growth/tournament/invite', { id: b.dataset.inv }); toast(r.sent ? `${r.sent} more invites sent` : 'Everyone in those segments is already invited'); }
           if (b.dataset.rem) { const r = await api('/api/growth/tournament/remind', { id: b.dataset.rem }); toast(`Reminder sent to ${r.sent} captains`); }
-          if (b.dataset.cx && confirm('Cancel this event? Slots reopen on every marketplace and teams are notified.')) { await api('/api/growth/tournament/cancel', { id: b.dataset.cx }); toast('Event cancelled · slots reopened'); }
+          if (b.dataset.cx && await ask({ title: `Cancel ${evName}?`, body: 'The slots reopen on every marketplace and registered teams are notified on WhatsApp.', ok: 'Cancel event', danger: true })) { await api('/api/growth/tournament/cancel', { id: b.dataset.cx }); toast('Event cancelled · slots reopened'); }
         });
       }
       evNote();

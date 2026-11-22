@@ -285,6 +285,15 @@
   .chipst.mut{color:var(--label2);background:var(--fill)}
   .daysep{font-size:12px;font-weight:600;color:var(--label2);padding:8px 4px 2px}
   @media (max-width:760px){.uphead{display:none}.up{grid-template-columns:80px 1fr}.us,.chipst{grid-column:2}}
+  /* Confirmation modal */
+  #cfSheet{width:min(460px,92vw)}
+  .cf-body{font-size:14px;line-height:1.45;color:var(--label2,inherit)}
+  .cf-items{display:flex;flex-direction:column;max-height:46vh;overflow:auto;border-top:.5px solid var(--sep)}
+  .cf-items:empty{display:none}
+  .cf-items>div{padding:8px 0;border-bottom:.5px solid var(--sep);font-size:13px}
+  .cf-items .mut{font-size:12px}
+  .cf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+  .cf-actions button.primary.danger{background:var(--red);color:#fff}
 </style>
 <link rel="stylesheet" href="/growth.css">
 </head>
@@ -449,6 +458,16 @@
   </main>
 </div>
 
+<dialog id="cfSheet" aria-labelledby="cfTitle">
+  <form method="dialog" id="cfForm">
+    <div class="sheet-h"><b id="cfTitle">Are you sure?</b></div>
+    <div class="sheet-b">
+      <div id="cfBody" class="cf-body"></div>
+      <div id="cfItems" class="cf-items"></div>
+      <div class="cf-actions"><button type="button" class="plain" id="cfCancel" value="cancel">Cancel</button><button type="submit" class="primary" id="cfOk" value="ok">Confirm</button></div>
+    </div>
+  </form>
+</dialog>
 <dialog id="bkSheet">
   <div class="sheet-h"><b id="bkTitle">Booking</b><button type="button" class="plain" id="bkClose">Done</button></div>
   <div class="sheet-b" id="bkBody"></div>
@@ -507,6 +526,19 @@ const I = {
 
 let S = null, view = 'today', feedTab = 'postings', chatSel = 'sim', aiOnline = false, aiForcedOff = false, seenPostings = new Set();
 const api = (p, body) => fetch(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(r => r.json());
+// Confirmation modal: await confirmModal({ title, body, items: [html,...], ok: 'Send', danger }) → true / false.
+// Enter confirms, Esc or Cancel dismisses. Used before anything that sends messages, changes prices or wipes data.
+function confirmModal({ title = 'Are you sure?', body = '', items = [], ok = 'Confirm', danger = false } = {}) {
+  const d = $('cfSheet');
+  $('cfTitle').textContent = title; $('cfBody').innerHTML = body; $('cfItems').innerHTML = items.map(x => `<div>${x}</div>`).join('');
+  $('cfOk').textContent = ok; $('cfOk').classList.toggle('danger', !!danger);
+  return new Promise(resolve => {
+    const done = v => { d.onclose = null; if (d.open) d.close(); resolve(v); };
+    $('cfCancel').onclick = () => done(false);
+    d.onclose = () => done(d.returnValue === 'ok');
+    d.returnValue = ''; d.showModal(); $('cfOk').focus();
+  });
+}
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400); }
 
 // ───────── Live state from the server ─────────
@@ -634,9 +666,18 @@ function renderUpcoming() {
   }
   $('uplist').innerHTML = rows.length ? rows.join('') : '<div class="mut" style="padding:16px">No upcoming bookings yet. Book from WhatsApp, a marketplace, or the desk.</div>';
 }
+// Shared: confirm, then cancel a booking or remove an owner block
+async function confirmCancel(d, h) {
+  const b = S.slots[d][h].booking; if (!b) return false;
+  const ok = await confirmModal(b.kind === 'owner'
+    ? { title: 'Remove this owner block?', body: `${E.dayLabel(d)} ${E.hLabel(h)} goes back on sale on every channel.`, ok: 'Remove block', danger: true }
+    : { title: 'Cancel this booking?', body: '<b>' + esc(b.ref) + '</b> for ' + esc(b.customer) + ' · ' + E.dayLabel(d) + ' ' + E.hLabel(h) + '. The slot reopens on every channel and the marketplaces are updated.', ok: 'Cancel booking', danger: true });
+  if (ok) await api('/api/cancel', { day: d, hour: h });
+  return ok;
+}
 $('uplist').addEventListener('click', e => {
   const r = e.target.closest('.up'); if (!r) return; const d = r.dataset.d, h = +r.dataset.h, sl = S.slots[d][h];
-  if (sl.booking && confirm(sl.booking.kind === 'owner' ? 'Remove this owner block?' : `Cancel ${sl.booking.ref} for ${sl.booking.customer}? Unblocks go to every marketplace.`)) api('/api/cancel', { day: d, hour: h });
+  if (sl.booking) confirmCancel(d, h);
 });
 $('leftTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; leftTab = b.dataset.t;
   document.querySelectorAll('#leftTabs button').forEach(x => x.classList.toggle('active', x === b));
@@ -713,7 +754,7 @@ $('grid').addEventListener('click', async e => {
   const td = e.target.closest('td.cell'); if (!td) return;
   const [d, hs, c] = td.dataset.k.split('|'), h = +hs, sl = S.slots[d][h];
   if (sl.booking && (sl.booking.channel === c || sl.booking.kind === 'owner')) {
-    if (confirm(sl.booking.kind === 'owner' ? 'Remove owner block?' : `Cancel ${sl.booking.ref}?`)) api('/api/cancel', { day: d, hour: h });
+    await confirmCancel(d, h);
     return;
   }
   if (sl.booking || sl.hold) {   // race: another channel tries a sold/held slot → engine rejects it
@@ -772,7 +813,7 @@ $('offForm').onsubmit = async e => {
 
 document.querySelectorAll('#days button').forEach(b => b.onclick = () => { view = b.dataset.day; render(); });
 $('feedTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; feedTab = b.dataset.f; document.querySelectorAll('#feedTabs button').forEach(x => x.classList.toggle('active', x === b)); renderFeed(); };
-$('resetBtn').onclick = () => { api('/api/reset'); $('reasons').innerHTML = '<div class="mut">Tap Optimise to reprice free slots per channel.</div>'; $('reply').style.display = 'none'; seenPostings = new Set(); renderChat.key = null; };
+$('resetBtn').onclick = async () => { if (!await confirmModal({ title: 'Reset the demo?', body: 'All bookings, holds, price changes, chats and campaign results go back to the starting state.', ok: 'Reset', danger: true })) return; api('/api/reset'); $('reasons').innerHTML = '<div class="mut">Tap Optimise to reprice free slots per channel.</div>'; $('reply').style.display = 'none'; seenPostings = new Set(); renderChat.key = null; };
 setInterval(() => { if (S && E.DAYS.some(d => E.HOURS.some(h => S.slots[d][h].hold))) { if (role === 'staff') renderCalendar(); else { renderUpcoming(); if (leftTab === 'slots') renderGrid(); } } }, 1000);
 setInterval(() => { if (S && role === 'staff') renderStaff(); }, 30000); // keep the now-line and 'in N min' fresh
 
@@ -816,7 +857,16 @@ $('optBtn').onclick = async () => {
   let res, src = 'Sarvam AI';
   try { if (!aiOnline) throw 0; res = extractJSON(await aiChat(OPT_SYSTEM, 'Current inventory:\n' + JSON.stringify(snapshotForAI()))); if (!Array.isArray(res.changes)) throw 0; }
   catch { src = 'Fallback rules'; res = fallbackOptimise(); }
-  const r = await api('/api/pricing/apply', { changes: res.changes, source: src });
+  const changes = (res.changes || []).filter(c => S.slots[c.day]?.[c.hour] && E.ch(c.channel));
+  if (!changes.length) { toast('No price changes suggested'); btn.innerHTML = I.spark + 'Optimise'; btn.disabled = false; return; }
+  const okApply = await confirmModal({
+    title: `Apply ${changes.length} price change${changes.length === 1 ? '' : 's'}?`,
+    body: `Suggested by <b>${src}</b>. ${esc(res.summary || '')} Marketplace prices are updated as soon as you apply. Guardrails may still adjust or reject some changes.`,
+    items: changes.map(c => { const old = E.listed(S.slots[c.day][c.hour], c.day, c.hour, c.channel);
+      return `<b>${E.dayLabel(c.day)} ${E.hLabel(c.hour)} · ${E.chName(c.channel)}</b>: ${rupee(old)} → <b>${rupee(c.new_price)}</b><br><span class="mut">${esc(c.reason || '')}</span>`; }),
+    ok: 'Apply prices' });
+  if (!okApply) { $('reasons').innerHTML = `<div class="mut">Discarded ${changes.length} suggested change${changes.length === 1 ? '' : 's'}. Nothing was repriced.</div>`; btn.innerHTML = I.spark + 'Optimise'; btn.disabled = false; return; }
+  const r = await api('/api/pricing/apply', { changes, source: src });
   $('reasons').innerHTML = `<div class="ai"><b>${src}</b>: ${esc(res.summary || '')} (${r.applied.length} applied${r.rejected ? `, ${r.rejected} rejected by guardrails` : ''})</div>` +
     r.applied.map(x => `<div><b>${E.dayLabel(x.day)} ${E.hLabel(x.hour)} · ${E.chName(x.channel)}</b>: ${rupee(x.old)} → <b class="${x.new < x.old ? 'ok' : 'ai'}">${rupee(x.new)}</b><br><span class="mut">${esc(x.reason)}</span></div>`).join('');
   btn.innerHTML = I.spark + 'Optimise'; btn.disabled = false;
@@ -859,6 +909,16 @@ async function runCommand() {
   let res, src = 'Sarvam AI';
   try { if (!aiOnline) throw 0; res = extractJSON(await aiChat(CMD_SYSTEM, text)); if (!Array.isArray(res.actions)) throw 0; }
   catch { src = 'Fallback parser'; res = fallbackParse(text); }
+  if (res.actions.length) {
+    const chs = a => (a.channels || []).includes('all') ? 'all channels' : (a.channels || []).map(c => E.ch(c) ? E.chName(c) : c).join(', ');
+    const what = { block: 'Stop selling', unblock: 'Reopen', book: 'Book', set_discount: 'Discount', set_price: 'Set price', clear: 'Clear discount and price' };
+    const okRun = await confirmModal({
+      title: `Apply ${res.actions.length === 1 ? 'this change' : res.actions.length + ' changes'}?`,
+      body: `Understood by <b>${src}</b> from: <i>${esc(text)}</i>`,
+      items: res.actions.map(a => `<b>${what[a.type] || a.type}${a.type === 'set_discount' ? ` ${a.value}%` : a.type === 'set_price' ? ` ${rupee(a.value)}` : ''}</b> · ${E.dayLabel(a.day)} ${E.hLabel(a.start_hour)} to ${E.hLabel(a.end_hour)} · ${esc(chs(a))}`),
+      ok: 'Apply' });
+    if (!okRun) { $('reply').style.display = 'block'; $('reply').innerHTML = '<span class="mut">Cancelled. Nothing was changed.</span>'; btn.innerHTML = 'Run'; btn.disabled = false; return; }
+  }
   const r = await api('/api/owner/actions', { actions: res.actions });
   const reply = res.reply_hi || hindiReply(res.actions);
   $('reply').style.display = 'block';
@@ -1060,7 +1120,7 @@ $('bkBody').onclick = async e => {
   if (['arrived', 'no_show', 'booked'].includes(a)) return setBkStatus(d, h, a);
   if (a === 'chat') { $('bkSheet').close(); staffChat = b.phone; inboxTab = 'all'; threadKey = null; renderInbox(); $('replyInput').focus(); return; }
   if (a === 'call') { location.href = 'tel:' + realPhone(b.phone).replace(/[^\d+]/g, ''); return; }
-  if (a === 'cancel' && confirm(`Cancel ${b.ref} for ${b.customer}? The slot reopens on every channel.`)) { await api('/api/cancel', { day: d, hour: h }); $('bkSheet').close(); toast(`Cancelled ${b.ref}`); }
+  if (a === 'cancel' && await confirmCancel(d, h)) { $('bkSheet').close(); toast(`Cancelled ${b.ref}`); }
 };
 $('bkClose').onclick = () => $('bkSheet').close();
 $('bkSheet').addEventListener('close', () => { bkOpen = null; });
