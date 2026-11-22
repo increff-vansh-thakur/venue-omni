@@ -5,6 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const E = require('./engine');
+const growth = require('./growth');
 
 const PORT = process.env.PORT || 3000;
 const KEY = process.env.SARVAM_API_KEY || '';
@@ -44,6 +45,7 @@ function freshState() {
                   { from: 'bot', text: 'Namaste Arjun! 👋 Kickoff Arena, Koramangala ⚽\n5-a-side turf book karne ke liye time bhejiye.', ts: t0 - 415e3 });
   arjun.needsHuman = true; arjun.unread = 1; arjun.lastTs = t0 - 420e3;
   event('info', `Inventory loaded · ${E.CHANNELS.map(c => c.name).join(', ')} connected`);
+  growth.reset();
 }
 
 function event(kind, text) {
@@ -76,6 +78,7 @@ const unblockAll = (d, h, reason, ref) =>
 // ───────────────────────────── Booking engine ─────────────────────────────
 function book({ day, hour, channel, customer, phone, kind, holdRef, note }) {
   hour = +hour;
+  ({ customer, phone } = growth.enrich({ channel, customer, phone, kind }));   // marketplaces share the player's name + number
   if (!validSlot(day, hour) || !E.CH_IDS.includes(channel)) return { ok: false, error: 'invalid slot or channel' };
   const sl = S.slots[day][hour];
   if (sl.booking) {
@@ -94,9 +97,11 @@ function book({ day, hour, channel, customer, phone, kind, holdRef, note }) {
   const isOwnerBlock = kind === 'owner';
   const price = isOwnerBlock ? 0 : fromHold ? sl.hold.price : E.listed(sl, day, hour, channel);
   const ref = fromHold ? sl.hold.ref : 'TB-' + (S.seq++);
+  const heldOffer = fromHold ? sl.hold.offer : null;
   if (fromHold) { clearTimeout(holdTimers[ref]); delete holdTimers[ref]; sl.hold = null; }
   if (!isOwnerBlock && (Object.keys(sl.override).length || Object.keys(sl.reason).length)) S.stats.aiFills++;
-  sl.booking = { ref, channel, kind: kind || E.ch(channel).source, customer: customer || 'Guest', phone: phone || null, price, net: E.net(price, channel), at: Date.now(), note: note || '', status: 'booked' };
+  sl.booking = { ref, channel, kind: kind || E.ch(channel).source, customer: customer || 'Guest', phone: phone || null, price, net: E.net(price, channel), at: Date.now(), note: note || '', status: 'booked', offer: heldOffer || null };
+  growth.onBooking(sl.booking, day, hour);
 
   const what = isOwnerBlock ? `Owner block (${note || 'blocked'})` : `${E.chName(channel)} booking ${ref} · ${customer || 'Guest'} · ₹${price}`;
   event('ok', `● ${what} · ${slotName(day, hour)}`);
@@ -134,12 +139,14 @@ function hold({ day, hour, customer, phone }) {
   if (sl.booking || sl.hold) return { ok: false, error: sl.booking ? 'booked' : 'held' };
   if (sl.closed.whatsapp) return { ok: false, error: 'closed' };
   if (E.isPast(day, hour)) return { ok: false, error: 'past' };
-  const ref = 'TB-' + (S.seq++), price = E.listed(sl, day, hour, 'whatsapp');
-  sl.hold = { ref, customer, phone, price, expires: Date.now() + HOLD_SECONDS * 1000 };
-  event('warn', `◐ Payment hold ${ref} · WhatsApp · ${customer} · ${slotName(day, hour)} · ₹${price} · ${HOLD_SECONDS / 60} min`);
+  const ref = 'TB-' + (S.seq++); let price = E.listed(sl, day, hour, 'whatsapp');
+  const offer = growth.offerFor(phone, day, hour);            // personal WhatsApp offer from a discount rule / nudge
+  if (offer) price = E.clamp(price * (1 - offer.pct / 100), 'whatsapp');
+  sl.hold = { ref, customer, phone, price, offer: offer ? offer.code : null, expires: Date.now() + HOLD_SECONDS * 1000 };
+  event('warn', `◐ Payment hold ${ref} · WhatsApp · ${customer} · ${slotName(day, hour)} · ₹${price}${offer ? ` (offer ${offer.code}, ${offer.pct}% off)` : ''} · ${HOLD_SECONDS / 60} min`);
   blockOthers(day, hour, null, 'WhatsApp payment hold', ref);
   holdTimers[ref] = setTimeout(() => expireHold(day, hour, ref), HOLD_SECONDS * 1000);
-  return { ok: true, ref, price, expires_in_seconds: HOLD_SECONDS, upi: upiLink(price, ref) };
+  return { ok: true, ref, price, offer: offer ? { code: offer.code, pct: offer.pct } : null, expires_in_seconds: HOLD_SECONDS, upi: upiLink(price, ref) };
 }
 function expireHold(day, hour, ref, why = 'expired') {
   const sl = S.slots[day][hour]; if (!sl.hold || sl.hold.ref !== ref) return;
@@ -346,7 +353,8 @@ function offerAndHold(c, day, hour) {
   c.ctx = { stage: 'awaiting_payment', ref: h.ref, day, hour };
   const aggPrice = E.listed(S.slots[day][hour], day, hour, 'aggA');
   const saving = aggPrice > h.price ? `\n💚 Apps par ₹${aggPrice} — WhatsApp par ₹${aggPrice - h.price} kam!` : '\n💚 Direct booking — koi convenience fee nahi';
-  botSay(c, `✅ ${E.dayLabel(day)} ${E.hLabel(hour)} available hai!\n💰 ₹${h.price}${saving}\n⏳ Slot ${HOLD_SECONDS / 60} min ke liye hold kar diya (${h.ref}).\n\nUPI se pay karein:\n${h.upi}\n\nPayment ke baad "paid" bhejiye.`,
+  const off = h.offer ? `\n🏷 Offer ${h.offer.code} apply hua — ${h.offer.pct}% OFF` : '';
+  botSay(c, `✅ ${E.dayLabel(day)} ${E.hLabel(hour)} available hai!\n💰 ₹${h.price}${off}${saving}\n⏳ Slot ${HOLD_SECONDS / 60} min ke liye hold kar diya (${h.ref}).\n\nUPI se pay karein:\n${h.upi}\n\nPayment ke baad "paid" bhejiye.`,
     [{ label: `Pay ₹${h.price} via UPI`, send: 'paid', hint: 'Reply "paid" after paying' }]);
   return true;
 }
@@ -366,6 +374,7 @@ async function botHandleOne(phone, name, text, real) {
     c.needsHuman = true; event('warn', `💬 WhatsApp ${c.name}: "${text}" → waiting for staff (bot paused)`); return;
   }
   c.typing = true; broadcast();
+  if (growth.handleReply(c, text)) return;       // tournament JOIN / STOP opt-out / nudge reply tracking
   const p = await parseIntent(text, c.ctx);
   if (p.intent === 'other') c.needsHuman = true;   // bot can't answer this one: flag for the front desk
   event('info', `💬 WhatsApp ${c.name}: "${text}" → ${p.intent}${p.day ? ' ' + p.day : ''}${p.hour != null ? ' ' + p.hour + ':00' : ''} (${p.via})`);
@@ -434,7 +443,7 @@ const clients = new Set(); let pending = false;
 const snapshot = () => ({ slots: S.slots, postings: S.postings.slice(0, 80), events: S.events.slice(0, 100), stats: S.stats,
   chats: Object.values(S.chats).map(c => ({ phone: c.phone, name: c.name, real: c.real, typing: c.typing, msgs: c.msgs.slice(-40),
     needsHuman: !!c.needsHuman, human: !!c.human, unread: c.unread || 0, lastTs: c.lastTs || 0 })),
-  wa: S.wa, ai: !!KEY, model: CHAT_MODEL, now: Date.now() });
+  wa: S.wa, ai: !!KEY, model: CHAT_MODEL, now: Date.now(), growth: growth.snapshot() });
 function broadcast() {
   if (pending) return; pending = true;
   setTimeout(() => { pending = false; const data = `data: ${JSON.stringify(snapshot())}\n\n`; for (const res of clients) res.write(data); }, 40);
@@ -443,7 +452,8 @@ function broadcast() {
 // ───────────────────────────── HTTP ─────────────────────────────
 const readBody = req => new Promise((res, rej) => { const ch = []; req.on('data', c => ch.push(c)); req.on('end', () => res(Buffer.concat(ch))); req.on('error', rej); });
 const send = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
-const STATIC = { '/': ['index.html', 'text/html; charset=utf-8'], '/index.html': ['index.html', 'text/html; charset=utf-8'], '/engine.js': ['engine.js', 'text/javascript'] };
+const STATIC = { '/': ['index.html', 'text/html; charset=utf-8'], '/index.html': ['index.html', 'text/html; charset=utf-8'], '/engine.js': ['engine.js', 'text/javascript'],
+  '/growth-ui.js': ['growth-ui.js', 'text/javascript'], '/growth.css': ['growth.css', 'text/css'] };
 
 http.createServer(async (req, res) => {
   try {
@@ -481,6 +491,8 @@ http.createServer(async (req, res) => {
     if (url === '/api/wa/sim') { botHandle('sim', body.name || 'Priya', String(body.text || '').slice(0, 500), false).catch(e => console.error(e)); return send(res, 200, { ok: true }); }
     if (url === '/api/wa/reset-sim') { delete S.chats.sim; chatFor('sim', body.name || 'Priya', false); broadcast(); return send(res, 200, { ok: true }); }
 
+    if (url.startsWith('/api/growth/')) { const r = growth.route(url, body); broadcast(); return send(res, 200, r); }
+
     // Sarvam proxy
     if (!KEY && url.startsWith('/api/')) return send(res, 503, { error: 'SARVAM_API_KEY not set' });
     if (url === '/api/chat') return send(res, 200, { content: await sarvamChat(body.system, body.user) });
@@ -502,6 +514,7 @@ http.createServer(async (req, res) => {
   console.log(`TurfOS → http://localhost:${PORT}   MCP → http://localhost:${PORT}/mcp   (Sarvam key: ${KEY ? 'set' : 'MISSING – fallbacks only'})`);
 });
 
+growth.init({ S: () => S, E, book, cancel, callTool, botSay, chatFor, event, broadcast, upiLink });
 freshState();
 
 // Optional: real WhatsApp number (layer 2)
