@@ -1,4 +1,4 @@
-# TurfOS: Omnichannel Slot Fulfilment for Sports Venues
+# VenueBuddy: Omnichannel Slot Fulfilment for Sports Venues
 Hackathon requirements and understanding doc, v1.0 (build window: about 45 min)
 
 ---

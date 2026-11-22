@@ -1,4 +1,4 @@
-# TurfOS redesign and docs · action plan
+# VenueBuddy redesign and docs · action plan
 
 Status: **planning only. Nothing in the app has changed.** This folder (`~/venue-omni-redesign`) is a snapshot copy of `~/venue-omni` taken on 22 Nov 2026, including uncommitted work (growth.js, growth-ui.js, growth.css).
 
@@ -27,7 +27,7 @@ Doc fixes needed so problem and solution line up:
 2. **Channels.** Docs say 4 channels (Direct, Aggregator A, B, Walk-in). The app has 5: WhatsApp, Playon (20%), Hurdle (15%), Distinct (18%), Offline. Update docs to the app's names and say the marketplace names are fictional.
 3. **Out of scope is out of date.** WhatsApp bot, UPI link, staff role and growth campaigns are listed as out of scope or Phase 2/3 but are now built. Move them to "Built (demo-grade)" and say what is simulated: payment is not verified, marketplace postings are mocked, no login, no database.
 4. **Real brand names.** The md names Playo, Hudle and KheloMore in the problem statement. Keep them only in the problem section (market context), never as product channels.
-5. **README.** Rewrite around the one-liner, then a "Problem → what TurfOS does" table (the one above, shortened), then screenshots of the chosen design, then run and deploy.
+5. **README.** Rewrite around the one-liner, then a "Problem → what VenueBuddy does" table (the one above, shortened), then screenshots of the chosen design, then run and deploy.
 
 ## Step 2 · Build the chosen design (on the copy, not the main folder)
 1. Re-sync this copy with `~/venue-omni` once your growth work is committed, then make it a git branch `redesign` so it merges cleanly.

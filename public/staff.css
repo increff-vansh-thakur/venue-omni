@@ -1,0 +1,164 @@
+/* VenueBuddy · front-desk (staff) view. Scoped under #staffView; dialog styles scoped under #dialogs.
+   Tokens and shared components come from theme.css. */
+
+/* ── Shared bits ── */
+#staffView .topline { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:24px; }
+#staffView .topline + .grid { margin-top:16px; }
+#staffView .btn.tall, #dialogs .btn.tall { min-height:44px; }
+#staffView .btn.full { width:100%; }
+#staffView .linkish, #dialogs .linkish { background:none; border:0; padding:0; color:var(--ink); font-weight:600; font-size:13px; text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--faint); }
+#staffView .linkish:hover { text-decoration-color:var(--ink); }
+#staffView .card > .linkish { margin-top:10px; display:inline-block; }
+#staffView .row.hit { cursor:pointer; border-radius:var(--r-sm); margin:0 -8px; padding-left:8px; padding-right:8px; }
+#staffView .row.hit:hover { background:var(--surface-2); }
+#staffView .row.hit + .row.hit { border-top-color:var(--rule); }
+#staffView .row.done .t, #staffView .row.done .grow { color:var(--muted); }
+#staffView .row .chip .i, #dialogs .chip .i { width:13px; height:13px; vertical-align:-2px; }
+#staffView .row .btn.sm { min-height:40px; min-width:84px; }
+#staffView .row .btn.add { min-width:0; }
+#staffView .m .mark { margin-right:6px; }
+#staffView .empty.pad { padding:18px 6px; }
+
+/* ── Desk: hero "Next arrival" card ── */
+#staffView .hero { padding:26px 30px; }
+#staffView .hero .label { margin-bottom:14px; }
+#staffView .hero-row { display:flex; align-items:center; gap:32px; }
+#staffView .hero .when { font:600 64px/1 var(--display); letter-spacing:-.02em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+#staffView .hero .who { flex:1; min-width:0; }
+#staffView .hero .name { font:600 28px/1.15 var(--display); letter-spacing:-.01em; margin-bottom:8px; overflow-wrap:anywhere; }
+#staffView .hero .meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+#staffView .hero .meta .sep { color:var(--faint); }
+#staffView .hero .rel { margin-top:12px; }
+#staffView .hero .actions { display:flex; gap:12px; flex:none; }
+#staffView .hero .actions .btn { min-height:52px; min-width:120px; }
+#staffView .hero-empty { display:flex; align-items:center; justify-content:space-between; gap:24px; }
+#staffView .hero-empty .name { font-size:24px; color:var(--ink); }
+#staffView .wa-note { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+
+/* ── Calendar: day sheet ── */
+#staffView .daysheet { padding:6px 14px; }
+#staffView .hr { display:flex; align-items:stretch; gap:14px; min-height:60px; border-top:1px solid var(--rule); position:relative; width:100%; background:none; border-left:0; border-right:0; border-bottom:0; text-align:left; padding:0; color:var(--ink); font:inherit; border-radius:0; }
+#staffView .hr:first-child { border-top:0; }
+#staffView .hr .t { width:72px; flex:none; display:flex; flex-direction:column; justify-content:center; gap:2px; font-weight:600; font-variant-numeric:tabular-nums; padding-left:10px; }
+#staffView .hr .t.wide { width:auto; min-width:72px; white-space:nowrap; }
+#staffView .hr .body { flex:1; min-width:0; display:flex; align-items:center; gap:12px; padding:10px 8px 10px 0; }
+#staffView .hr .bar { width:3px; align-self:stretch; border-radius:2px; flex:none; }
+#staffView .hr .grow { flex:1; min-width:0; }
+#staffView .hr .nm { font-weight:500; display:flex; align-items:center; gap:6px; }
+#staffView .hr .m { color:var(--muted); font-size:13px; }
+#staffView .hr.hit { cursor:pointer; }
+#staffView .hr.hit:hover { background:var(--surface-2); }
+#staffView .hr.past .t, #staffView .hr.earlier .grow { color:var(--muted); }
+#staffView .hr.fold { cursor:pointer; }
+#staffView .hr.fold:hover { background:var(--surface-2); }
+#staffView .hr.fold .grow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#staffView .hr.earlier { min-height:48px; }
+#staffView .hr.now { background:var(--surface-2); }
+#staffView .hr.now::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:2px; background:var(--accent); }
+#staffView .hr .nowtag { font-size:11px; font-weight:600; color:var(--accent); letter-spacing:.04em; text-transform:uppercase; }
+#staffView .hr.free .add { opacity:.75; pointer-events:none; }
+#staffView .hr.free:hover .add { opacity:1; border-color:var(--faint); }
+#staffView .rail { display:flex; flex-direction:column; gap:20px; position:sticky; top:84px; align-self:start; }
+#staffView .now-num { margin:6px 0 4px; font-size:24px; overflow-wrap:anywhere; }
+#staffView #calNow .btn { margin-top:16px; }
+#staffView .wa-line { font-size:13.5px; padding:6px 0; border-top:1px solid var(--rule); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#staffView .wa-line:first-of-type { border-top:0; }
+#staffView .wa-line .m { color:var(--muted); }
+#staffView #calWa .card-h { margin-bottom:6px; }
+#staffView #calWa .count, #staffView .inbox-col .count { vertical-align:1px; }
+
+/* ── WhatsApp: inbox, thread, today ── */
+#staffView .seg.full, #dialogs .seg.full { display:flex; width:100%; }
+#staffView .seg.full button, #dialogs .seg.full button { flex:1; }
+#staffView .inbox-col { padding:12px; }
+#staffView .inbox-col .seg { margin-bottom:8px; }
+#staffView .conv { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:0; border-radius:var(--r-sm); padding:10px; color:var(--ink); }
+#staffView .conv:hover { background:var(--surface-2); }
+#staffView .conv.sel { background:var(--surface-2); box-shadow:inset 3px 0 0 var(--ink); }
+#staffView .conv .grow { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+#staffView .conv .nm { display:flex; align-items:center; gap:6px; }
+#staffView .conv .last { color:var(--muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#staffView .conv .r { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex:none; }
+#staffView .conv .when { color:var(--faint); font-size:11.5px; }
+#staffView .live { font-size:11px; color:var(--ok); border:1px solid currentColor; border-radius:99px; padding:0 6px; }
+#staffView .avatar { width:34px; height:34px; border-radius:50%; background:var(--surface-2); border:1px solid var(--rule); display:grid; place-items:center; font:600 14px/1 var(--display); color:var(--ink); flex:none; }
+#staffView .inbox-col .empty { padding:14px 10px; }
+
+#staffView .thread-col { display:flex; flex-direction:column; padding:0; min-height:560px; }
+#staffView .thread-empty { align-items:center; justify-content:center; }
+#staffView .thead { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--rule); }
+#staffView .thead .grow { flex:1; min-width:0; }
+#staffView .thead .m { color:var(--muted); font-size:13px; }
+#staffView .toggle { display:inline-flex; align-items:center; gap:8px; background:none; border:1px solid var(--rule); border-radius:99px; padding:5px 6px 5px 12px; font-size:13px; font-weight:500; color:var(--muted); min-height:34px; }
+#staffView .toggle i { width:30px; height:18px; border-radius:99px; background:var(--rule); position:relative; transition:background .15s; }
+#staffView .toggle i::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:var(--muted); transition:transform .15s, background .15s; }
+#staffView .toggle[aria-checked="true"] { color:var(--ink); }
+#staffView .toggle[aria-checked="true"] i { background:var(--ok); }
+#staffView .toggle[aria-checked="true"] i::after { transform:translateX(12px); background:var(--ink); }
+#staffView .thread { flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:10px; max-height:52vh; min-height:280px; }
+#staffView .msg { max-width:78%; align-self:flex-start; background:var(--surface-2); border:1px solid var(--rule); border-radius:12px 12px 12px 4px; padding:9px 12px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; }
+#staffView .msg.out { align-self:flex-end; background:var(--bg); border-radius:12px 12px 4px 12px; }
+#staffView .msg.staff { border-color:var(--faint); }
+#staffView .msg small { display:block; margin-top:4px; color:var(--faint); font-size:11.5px; }
+#staffView .msg.out small { text-align:right; }
+#staffView .sys { align-self:center; font-size:12.5px; color:var(--muted); border:1px dashed var(--rule); border-radius:99px; padding:3px 12px; }
+#staffView .typing { align-self:flex-start; display:flex; gap:4px; padding:10px 12px; background:var(--surface-2); border-radius:12px; }
+#staffView .typing i { width:6px; height:6px; border-radius:50%; background:var(--muted); animation:vbDot 1s infinite; }
+#staffView .typing i:nth-child(2) { animation-delay:.15s; } #staffView .typing i:nth-child(3) { animation-delay:.3s; }
+@keyframes vbDot { 0%, 60%, 100% { opacity:.3; } 30% { opacity:1; } }
+#staffView .canned { display:flex; flex-wrap:wrap; gap:8px; padding:12px 18px 0; border-top:1px solid var(--rule); }
+#staffView .canned .chip { padding:6px 12px; font-size:13px; }
+#staffView .reply { display:flex; gap:10px; padding:12px 18px 16px; }
+#staffView .reply input { flex:1; min-height:44px; }
+#staffView .reply .btn { min-height:44px; min-width:84px; }
+
+/* ── Dialogs ── */
+#dialogs dialog { width:min(480px,94vw); }
+#dialogs .sheet-h { padding:16px 20px; }
+#dialogs .sheet-h b { font:600 17px/1.2 var(--display); }
+#dialogs .plain.icon { display:grid; place-items:center; width:36px; height:36px; padding:0; border-radius:var(--r-sm); }
+#dialogs .plain.icon .i { width:18px; height:18px; }
+#dialogs .plain.icon:hover { background:var(--surface-2); }
+#dialogs #offKind { margin-bottom:18px; }
+#dialogs #offKind button { min-height:38px; }
+#dialogs select, #dialogs input { min-height:44px; }
+#dialogs .price-note { display:grid; grid-template-columns:1fr auto; align-items:baseline; gap:4px 12px; padding:14px 16px; background:var(--bg); border:1px solid var(--rule); border-radius:var(--r-sm); font-size:13px; }
+#dialogs .price-note .pn-l { color:var(--muted); font-weight:500; }
+#dialogs .price-note .pn-v { font:600 22px/1 var(--display); font-variant-numeric:tabular-nums; }
+#dialogs .price-note .pn-s { grid-column:1 / -1; }
+#dialogs .sheet-f { display:flex; justify-content:flex-end; gap:10px; padding:14px 20px 18px; border-top:1px solid var(--rule); }
+#dialogs .sheet-f .btn.primary { min-width:140px; }
+
+#dialogs .bk-who { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+#dialogs .bk-who .name { font:600 22px/1.2 var(--display); overflow-wrap:anywhere; }
+#dialogs .kv { display:grid; grid-template-columns:110px 1fr; gap:0; margin:0 0 16px; }
+#dialogs .kv dt, #dialogs .kv dd { padding:9px 0; border-top:1px solid var(--rule); margin:0; }
+#dialogs .kv dt:first-of-type, #dialogs .kv dt:first-of-type + dd { border-top:0; }
+#dialogs .kv dt { color:var(--muted); font-size:13px; }
+#dialogs .kv dd { display:flex; align-items:center; gap:8px; font-weight:500; }
+#dialogs .kv dd.mono { font-family:var(--mono); }
+#dialogs .acts { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+#dialogs .acts:empty { display:none; }
+#dialogs .acts .btn { flex:1; }
+#dialogs .acts.end { justify-content:flex-start; margin-top:18px; padding-top:12px; border-top:1px solid var(--rule); }
+#dialogs .acts.end .btn { flex:none; padding-left:0; }
+#dialogs .btn.danger:hover { border-color:transparent; text-decoration:underline; text-underline-offset:3px; }
+#dialogs .btn.danger-solid { background:var(--alert); border-color:var(--alert); color:var(--accent-ink); }
+#dialogs .confirm { border:1px solid var(--alert); border-radius:var(--r-sm); padding:16px; }
+#dialogs .confirm .sub { margin:4px 0 6px; }
+#dialogs .note { margin-top:6px; }
+
+/* ── Narrow screens: one column ── */
+@media (max-width:1000px) {
+  #staffView .hero-row { flex-wrap:wrap; gap:16px 24px; }
+  #staffView .hero .actions { width:100%; }
+  #staffView .hero .actions .btn { flex:1; }
+  #staffView .hero-empty { flex-wrap:wrap; }
+  #staffView .rail { position:static; }
+  #staffView .thread { max-height:60vh; }
+}
+@media (max-width:560px) {
+  #staffView .hero .when { font-size:48px; }
+  #staffView .hr .body { flex-wrap:wrap; }
+}
+#staffView .grid > .card, #staffView .grid > .stack { align-self:start; }

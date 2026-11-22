@@ -1,4 +1,4 @@
-// TurfOS server — booking engine, channel-posting router, MCP endpoint, WhatsApp bot, Sarvam proxy.
+// VenueBuddy server — booking engine, channel-posting router, MCP endpoint, WhatsApp bot, Sarvam proxy.
 // Run:            SARVAM_API_KEY=xxxx node server.js        → http://localhost:3000
 // Real WhatsApp:  WHATSAPP=1 SARVAM_API_KEY=xxxx node server.js   (scan the QR with a SPARE number)
 const http = require('http');
@@ -25,9 +25,9 @@ function freshState() {
         stats: { conflicts: 0, aiFills: 0, postings: 0, mcpCalls: 0 }, wa: S?.wa || { status: 'off' } };
   for (const d of E.DAYS) { S.slots[d] = {}; for (const h of E.HOURS) S.slots[d][h] = E.emptySlot(); }
   // Seed: one booking per source so the grid looks lived-in. Tomorrow 7 PM is left open for the demo.
-  const seed = [['today', 7, 'offline', 'Rahul (walk-in)', 'walkin', '+91 98450 11223'], ['today', 19, 'aggA', 'Vikram (Playon)', 'aggregator', '+91 99000 45671'],
-                ['today', 20, 'whatsapp', 'Karan', 'whatsapp', 'sim-karan'], ['tomorrow', 20, 'aggB', 'Sneha (Hurdle)', 'aggregator', '+91 97411 80234'],
-                ['tomorrow', 21, 'aggC', 'Rohan (Distinct)', 'aggregator', '+91 90080 55412']];
+  const seed = [['today', 7, 'offline', 'Rahul', 'walkin', '+91 98450 11223'], ['today', 19, 'aggA', 'Vikram', 'aggregator', '+91 99000 45671'],
+                ['today', 20, 'whatsapp', 'Karan', 'whatsapp', 'sim-karan'], ['tomorrow', 20, 'aggB', 'Sneha', 'aggregator', '+91 97411 80234'],
+                ['tomorrow', 21, 'aggC', 'Rohan', 'aggregator', '+91 90080 55412']];
   for (const [d, h, c, who, kind, phone] of seed) {
     const sl = S.slots[d][h], price = E.listed(sl, d, h, c);
     sl.booking = { ref: 'TB-' + (S.seq++), channel: c, kind, customer: who, phone, price, net: E.net(price, c), at: Date.now(), seeded: true, status: 'booked' };
@@ -83,12 +83,12 @@ function book({ day, hour, channel, customer, phone, kind, holdRef, note }) {
   const sl = S.slots[day][hour];
   if (sl.booking) {
     S.stats.conflicts++;
-    event('err', `409 CONFLICT · ${E.chName(channel)} tried ${slotName(day, hour)} — already sold via ${E.chName(sl.booking.channel)} (${sl.booking.ref}). Double booking prevented.`);
+    event('err', `409 CONFLICT · ${E.chName(channel)} tried ${slotName(day, hour)}, already sold via ${E.chName(sl.booking.channel)} (${sl.booking.ref}). Double booking prevented.`);
     return { ok: false, error: 'conflict', booked_via: sl.booking.channel };
   }
   if (sl.hold && sl.hold.ref !== holdRef) {
     S.stats.conflicts++;
-    event('err', `409 CONFLICT · ${E.chName(channel)} tried ${slotName(day, hour)} — on payment hold for a WhatsApp customer (${sl.hold.ref}).`);
+    event('err', `409 CONFLICT · ${E.chName(channel)} tried ${slotName(day, hour)}, on payment hold for a WhatsApp customer (${sl.hold.ref}).`);
     return { ok: false, error: 'held', held_ref: sl.hold.ref };
   }
   if (sl.closed[channel]) { event('err', `Rejected · ${E.chName(channel)} is closed by the owner for ${slotName(day, hour)}`); return { ok: false, error: 'closed' }; }
@@ -105,7 +105,7 @@ function book({ day, hour, channel, customer, phone, kind, holdRef, note }) {
 
   const what = isOwnerBlock ? `Owner block (${note || 'blocked'})` : `${E.chName(channel)} booking ${ref} · ${customer || 'Guest'} · ₹${price}`;
   event('ok', `● ${what} · ${slotName(day, hour)}`);
-  if (fromHold) event('info', `  Aggregators were already blocked during the payment hold — no new postings needed`);
+  if (fromHold) event('info', `  Aggregators were already blocked during the payment hold. No new postings needed`);
   else {
     if (E.ch(channel).marketplace) post('CONFIRM', channel, day, hour, 'booking accepted', ref);
     blockOthers(day, hour, channel, isOwnerBlock ? 'owner block' : `booked via ${E.chName(channel)}`, ref);
@@ -118,7 +118,7 @@ function cancel({ day, hour, ref }) {
   hour = +hour; if (!validSlot(day, hour)) return { ok: false, error: 'invalid slot' };
   const sl = S.slots[day][hour], b = sl.booking; if (!b) return { ok: false, error: 'not booked' };
   sl.booking = null;
-  event('info', `↺ Cancelled ${b.ref} (${E.chName(b.channel)}) · ${slotName(day, hour)} — reopening on marketplaces`);
+  event('info', `↺ Cancelled ${b.ref} (${E.chName(b.channel)}) · ${slotName(day, hour)} · reopening on marketplaces`);
   unblockAll(day, hour, 'cancellation', b.ref);
   return { ok: true, ref: b.ref };
 }
@@ -184,7 +184,7 @@ function applyOwnerActions(actions) {
         if (book({ day: d, hour: h, channel: chs[0], customer: a.customer || 'Owner entry', kind: E.ch(chs[0]).source }).ok) count++;
         continue;
       }
-      if (sl.booking && a.type !== 'unblock') { rejected.push(`${slotName(d, h)} already booked — skipped`); continue; }
+      if (sl.booking && a.type !== 'unblock') { rejected.push(`${slotName(d, h)} already booked, skipped`); continue; }
       for (const c of chs) {
         const mk = E.ch(c).marketplace;
         if (a.type === 'block' && !sl.closed[c]) { sl.closed[c] = true; count++; if (mk && !sl.hold) post('BLOCK', c, d, h, 'closed by owner'); }
@@ -216,7 +216,7 @@ function applyPricing(changes, source) {
     delete sl.disc[c]; sl.reason[c] = String(x.reason || 'AI adjusted').slice(0, 120);
     const nw = E.listed(sl, d, h, c);
     applied.push({ day: d, hour: h, channel: c, old, new: nw, reason: sl.reason[c] });
-    event('ai', `✦ ${source}: ${slotName(d, h)} ${E.chName(c)} ₹${old}→₹${nw} — ${sl.reason[c]}`);
+    event('ai', `✦ ${source}: ${slotName(d, h)} ${E.chName(c)} ₹${old}→₹${nw} · ${sl.reason[c]}`);
     if (E.ch(c).marketplace) post('PRICE', c, d, h, 'AI repricing', null, { price: nw });
   }
   broadcast();
@@ -269,7 +269,7 @@ function handleMcp(msg) {
   const { id, method, params } = msg;
   const ok = result => ({ jsonrpc: '2.0', id, result });
   if (method === 'initialize') return ok({ protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} },
-    serverInfo: { name: 'turfos-venue', version: '1.0.0' }, instructions: 'Booking tools for Kickoff Arena (5-a-side turf, Bengaluru). Days: today/tomorrow; hours 6–22 (24h).' });
+    serverInfo: { name: 'venuebuddy', version: '1.0.0' }, instructions: 'VenueBuddy booking tools for Kickoff Arena (5-a-side turf, Bengaluru). Days: today/tomorrow; hours 6–22 (24h).' });
   if (method === 'ping') return ok({});
   if (method === 'tools/list') return ok({ tools: TOOLS.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });
   if (method === 'tools/call') {
@@ -352,8 +352,8 @@ function offerAndHold(c, day, hour) {
   const agg = callTool('check_availability', { day, hour }, 'WhatsApp bot').slots[0];
   c.ctx = { stage: 'awaiting_payment', ref: h.ref, day, hour };
   const aggPrice = E.listed(S.slots[day][hour], day, hour, 'aggA');
-  const saving = aggPrice > h.price ? `\n💚 Apps par ₹${aggPrice} — WhatsApp par ₹${aggPrice - h.price} kam!` : '\n💚 Direct booking — koi convenience fee nahi';
-  const off = h.offer ? `\n🏷 Offer ${h.offer.code} apply hua — ${h.offer.pct}% OFF` : '';
+  const saving = aggPrice > h.price ? `\n💚 Apps par ₹${aggPrice}, WhatsApp par ₹${aggPrice - h.price} kam!` : '\n💚 Direct booking, koi convenience fee nahi';
+  const off = h.offer ? `\n🏷 Offer ${h.offer.code} apply hua: ${h.offer.pct}% OFF` : '';
   botSay(c, `✅ ${E.dayLabel(day)} ${E.hLabel(hour)} available hai!\n💰 ₹${h.price}${off}${saving}\n⏳ Slot ${HOLD_SECONDS / 60} min ke liye hold kar diya (${h.ref}).\n\nUPI se pay karein:\n${h.upi}\n\nPayment ke baad "paid" bhejiye.`,
     [{ label: `Pay ₹${h.price} via UPI`, send: 'paid', hint: 'Reply "paid" after paying' }]);
   return true;
@@ -520,7 +520,7 @@ http.createServer(async (req, res) => {
     send(res, 404, { error: 'not found' });
   } catch (e) { console.error(e.message); send(res, 502, { error: e.message }); }
 }).listen(PORT, () => {
-  console.log(`TurfOS → http://localhost:${PORT}   MCP → http://localhost:${PORT}/mcp   (Sarvam key: ${KEY ? 'set' : 'MISSING – fallbacks only'})`);
+  console.log(`VenueBuddy → http://localhost:${PORT}   MCP → http://localhost:${PORT}/mcp   (Sarvam key: ${KEY ? 'set' : 'MISSING – fallbacks only'})`);
 });
 
 growth.init({ S: () => S, E, book, cancel, callTool, botSay, chatFor, event, broadcast, upiLink });

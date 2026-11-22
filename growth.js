@@ -78,7 +78,7 @@ const allMetrics = () => Object.values(G.players).map(metrics);
 const isOff = h => h >= 10 && h <= 15;
 const RULES = () => [
   { id: 'winback', code: 'BACK', name: 'Win back at-risk players', icon: 'heart', desc: 'Used to play regularly, quiet for 15–35 days', segs: ['at_risk'], pct: 20, band: 'any', validDays: 7, tpl: 'winback', enabled: true },
-  { id: 'comeback', code: 'COME', name: 'Lapsed comeback · afternoons', icon: 'repeat', desc: 'Not seen in 35+ days — bring them into dead off-peak slots', segs: ['lapsed'], pct: 30, band: 'offpeak', validDays: 10, tpl: 'lapsed', enabled: true },
+  { id: 'comeback', code: 'COME', name: 'Lapsed comeback · afternoons', icon: 'repeat', desc: 'Not seen in 35+ days. Bring them into dead off-peak slots', segs: ['lapsed'], pct: 30, band: 'offpeak', validDays: 10, tpl: 'lapsed', enabled: true },
   { id: 'direct', code: 'DIRECT', name: 'Go direct, skip the app fee', icon: 'arrow', desc: 'Regular & active players who book mostly via marketplaces', segs: ['regular', 'active'], minMk: 0.6, pct: 10, band: 'any', validDays: 14, tpl: 'direct', enabled: true },
   { id: 'loyalty', code: 'LOYAL', name: 'Loyalty · every 5th game', icon: 'gift', desc: 'Regulars whose next game is a 5th, 10th, 15th…', segs: ['regular'], every5: true, pct: 50, band: 'any', validDays: 14, tpl: 'loyalty', enabled: true },
   { id: 'fill', code: 'FILL', name: "Fill tomorrow's dead slots", icon: 'bolt', desc: 'Active, regular & new players · tomorrow 10 AM–4 PM only', segs: ['active', 'regular', 'new'], pct: 25, band: 'offpeak', validDays: 1, tpl: 'fill', enabled: true },
@@ -92,7 +92,7 @@ function makeOffer(phone, rule) {
 // Called by the booking engine when a WhatsApp hold is created: apply this customer's offer if the slot qualifies.
 function offerFor(phone, day, hour) { const o = activeOffer(phone); if (!o) return null; if (o.band === 'offpeak' && !isOff(hour)) return null; return o; }
 function economics(r) {
-  if (r.id === 'direct') { const p = 1300; return `Nets ₹${Math.round(p * (1 - r.pct / 100))} direct vs ₹${p * 0.8} via Playon — +₹${Math.round(p * (1 - r.pct / 100) - p * 0.8)} a game`; }
+  if (r.id === 'direct') { const p = 1300; return `Nets ₹${Math.round(p * (1 - r.pct / 100))} direct vs ₹${p * 0.8} via Playon, +₹${Math.round(p * (1 - r.pct / 100) - p * 0.8)} a game`; }
   const p = r.band === 'offpeak' ? 800 : 1300;
   return `Gives up ₹${Math.round(p * r.pct / 100)} a game · an empty slot earns ₹0`;
 }
@@ -102,14 +102,14 @@ const hin = (d, h) => `${d === 'today' ? 'aaj' : 'kal'} ${h < 12 ? 'subah' : h <
 function tpl(kind, m, o, x = {}) {
   const first = m.name.split(' ')[0], pct = o?.pct, code = o?.code;
   switch (kind) {
-    case 'winback': return `Hi ${first} 👋 ${m.last} din ho gaye turf pe aaye! ⚽\nAapke liye ${pct}% OFF — code ${code} (7 din valid).\nBas reply karo jaise "${hin('tomorrow', m.favHour)}" aur slot book ho jayega 💚`;
+    case 'winback': return `Hi ${first} 👋 ${m.last} din ho gaye turf pe aaye! ⚽\nAapke liye ${pct}% OFF, code ${code} (7 din valid).\nBas reply karo jaise "${hin('tomorrow', m.favHour)}" aur slot book ho jayega 💚`;
     case 'lapsed': return `${first}, Kickoff Arena aapko miss kar raha hai! 🥅\nComeback offer: dopahar ke slots (10 AM–4 PM) pe ${pct}% OFF. Code ${code}.\nReply karo jaise "kal dopahar 2 baje" 🙌`;
-    case 'direct': return `${first}, next game WhatsApp pe direct book karo — ${pct}% OFF vs app price, koi convenience fee nahi ✅\nCode ${code}. Reply karo jaise "${hin('tomorrow', m.favHour)}".`;
-    case 'loyalty': return `🎉 ${first}, aapka agla game aapka ${m.games90 + 1}th hai — loyalty reward ${pct}% OFF! Code ${code}.\nReply karo jaise "${hin('tomorrow', m.favHour)}".`;
-    case 'fill': return `⚡ ${first}, kal ${x.slot || 'dopahar'} slot free hai — sirf aapke liye ${pct}% OFF (code ${code}).\nReply "${x.cmd || 'kal dopahar 2 baje'}" aur ho gaya book!`;
-    case 'weekend': return `Weekend aa gaya ${first}! ⚽ Sat–Sun ke evening slots fast fill ho rahe hain.\nReply karo jaise "${hin('tomorrow', m.favHour)}" — WhatsApp pe best price 💚`;
-    case 'welcome': return `Thanks for playing at Kickoff Arena, ${first}! 🙏\nDoosra game WhatsApp pe direct book karo aur paao ${pct}% OFF — code ${code}.`;
-    case 'invite': return `🏆 ${x.t.name} — ${x.when} at Kickoff Arena!\n${x.t.format} · max ${x.t.teamsMax} teams · Prize ${x.t.prize}\nEntry ₹${x.t.fee}/team.\n\nTeam register karne ke liye reply karo JOIN`;
+    case 'direct': return `${first}, next game WhatsApp pe direct book karo: ${pct}% OFF vs app price, koi convenience fee nahi ✅\nCode ${code}. Reply karo jaise "${hin('tomorrow', m.favHour)}".`;
+    case 'loyalty': return `🎉 ${first}, aapka agla game aapka ${m.games90 + 1}th hai, loyalty reward ${pct}% OFF! Code ${code}.\nReply karo jaise "${hin('tomorrow', m.favHour)}".`;
+    case 'fill': return `⚡ ${first}, kal ${x.slot || 'dopahar'} slot free hai, sirf aapke liye ${pct}% OFF (code ${code}).\nReply "${x.cmd || 'kal dopahar 2 baje'}" aur ho gaya book!`;
+    case 'weekend': return `Weekend aa gaya ${first}! ⚽ Sat–Sun ke evening slots fast fill ho rahe hain.\nReply karo jaise "${hin('tomorrow', m.favHour)}". WhatsApp pe best price 💚`;
+    case 'welcome': return `Thanks for playing at Kickoff Arena, ${first}! 🙏\nDoosra game WhatsApp pe direct book karo aur paao ${pct}% OFF, code ${code}.`;
+    case 'invite': return `🏆 ${x.t.name} · ${x.when} at Kickoff Arena!\n${x.t.format} · max ${x.t.teamsMax} teams · Prize ${x.t.prize}\nEntry ₹${x.t.fee}/team.\n\nTeam register karne ke liye reply karo JOIN`;
     case 'reminder': return `⏰ Reminder: ${x.t.name} ${x.when}. Team ready rakho, 15 min pehle pahunchna 💪`;
     case 'cancelled': return `😔 ${x.t.name} cancel ho gaya hai. Entry fee 24 ghante mein refund ho jayegi.`;
   }
@@ -233,7 +233,7 @@ function createTournament(b) {
   const clash = []; for (let h = start; h < end; h++) { const sl = S.slots[day][h]; if (sl.booking || sl.hold) clash.push(X.E.hLabel(h)); }
   if (clash.length) return { ok: false, error: `Already booked: ${clash.join(', ')}` };
   const t = { id: 'T' + (G.tseq++), name: String(b.name || 'Turf Cup').slice(0, 60), type: b.type || 'Tournament', format: b.format || '5-a-side knockout', day, start, end,
-    teamsMax: Math.max(2, +b.teamsMax || 8), fee: Math.max(0, +b.fee || 0), prize: b.prize || '—', segs: b.segs?.length ? b.segs : ['regular', 'active'], teams: [], invited: [], status: 'open', createdAt: Date.now() };
+    teamsMax: Math.max(2, +b.teamsMax || 8), fee: Math.max(0, +b.fee || 0), prize: b.prize || 'TBA', segs: b.segs?.length ? b.segs : ['regular', 'active'], teams: [], invited: [], status: 'open', createdAt: Date.now() };
   for (let h = start; h < end; h++) X.book({ day, hour: h, channel: 'offline', kind: 'owner', customer: t.type, note: `🏆 ${t.name}` });
   G.tournaments.unshift(t);
   X.event('ok', `🏆 ${t.type} "${t.name}" created · ${whenText(t)} · ${end - start} slots blocked on every marketplace`);
@@ -304,7 +304,7 @@ function handleReply(c, text) {
   if (lastMsg && ['sent', 'delivered', 'read'].includes(lastMsg.status)) { lastMsg.status = 'replied'; lastMsg.reply = text; const cp = G.camps[lastMsg.camp]; if (cp) cp.replied++; }
   if (/^(stop|unsubscribe|band karo messages)/.test(s)) {
     const p = G.players[c.phone]; if (p) p.optOut = true;
-    X.botSay(c, 'Theek hai — ab aapko offers/reminders nahi bhejenge. Booking ke liye kabhi bhi message karein 🙏'); return true;
+    X.botSay(c, 'Theek hai, ab aapko offers/reminders nahi bhejenge. Booking ke liye kabhi bhi message karein 🙏'); return true;
   }
   if (/\b(join|register)\b|participate|team (ready|hai)/.test(s)) {
     const inv = G.outbox.find(m => m.phone === c.phone && m.kind === 'invite');

@@ -1,4 +1,4 @@
-# TurfOS redesign prompt (filled template)
+# VenueBuddy redesign prompt (filled template)
 
 Paste this into the build step after you pick an option in `options.html`. Replace the `{THEME}` and `{OWNER_LAYOUT}` / `{STAFF_LAYOUT}` blocks with the chosen ones from the menus below.
 
@@ -8,7 +8,7 @@ Paste this into the build step after you pick an option in `options.html`. Repla
 
 **Role.** You are a senior product designer building for the owner and front-desk staff of a single independent 5-a-side turf in an Indian city (Kickoff Arena, Koramangala). The owner is Hinglish-first, checks the business on a phone between other work, and cares about money kept, not dashboards. The front-desk person stands at a counter with a laptop or tablet, takes walk-ins and calls, and answers WhatsApp.
 
-**Goal and layout.** Redesign the two views of TurfOS, a tool that runs every booking channel (WhatsApp, three marketplace apps, walk-in and phone) from one slot inventory.
+**Goal and layout.** Redesign the two views of VenueBuddy, a tool that runs every booking channel (WhatsApp, three marketplace apps, walk-in and phone) from one slot inventory.
 - Owner view: `{OWNER_LAYOUT}`
 - Staff view: `{STAFF_LAYOUT}`
 - Each screen has exactly one primary focal point. Everything else is quieter: smaller type, lower contrast, or one click away.
@@ -69,7 +69,7 @@ Focal point: one large "Kept after fees today" number with the day's fill (booke
 Focal point: a compact hours by channel board for the selected day, with empty slots visually quiet and booked slots as solid blocks with the channel name. A narrow right rail holds the command box and the 3 latest changes. Numbers move into a single line above the board.
 
 ### O3 · Ask first
-Focal point: a large command box ("Tell TurfOS what to change") with 3 Hinglish example chips and the mic. Under it, a "What changed" feed of the last actions in plain sentences, then a slim today strip. Built for the owner on a phone.
+Focal point: a large command box ("Tell VenueBuddy what to change") with 3 Hinglish example chips and the mic. Under it, a "What changed" feed of the last actions in plain sentences, then a slim today strip. Built for the owner on a phone.
 
 ## Staff layout menu (`{STAFF_LAYOUT}`)
 

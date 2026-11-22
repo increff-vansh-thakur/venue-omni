@@ -7,6 +7,7 @@ connect();
 if (location.hash === '#autoplay') {
   const wait = ms => new Promise(r => setTimeout(r, ms));
   (async () => {
+    if (role === 'owner') setTab('slots');   // show the slot board while the demo runs
     await wait(600); await api('/api/reset'); await wait(600); view = 'tomorrow'; render();
     await aggBook('tomorrow', 18, 'aggA'); await wait(1500);                                                   // 1. aggregator booking
     await api('/api/book', { day: 'tomorrow', hour: 18, channel: 'offline', kind: 'walkin', customer: 'Walk-in' }); await wait(1200); //    race → blocked

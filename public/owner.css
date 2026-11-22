@@ -1,0 +1,155 @@
+/* VenueBuddy · owner view (Today, Slots, Pricing, Channel sync). Scoped under #ownerView; tokens from theme.css. */
+
+#ownerView .spacer { flex:1; }
+#ownerView .card-h { align-items:center; }
+#ownerView .card-h .seg, #ownerView .card-h select { font-weight:400; }
+#ownerView .card-h select { width:auto; padding:5px 8px; font-size:13px; }
+#ownerView .spin { display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:ov-spin .8s linear infinite; vertical-align:-2px; }
+@keyframes ov-spin { to { transform:rotate(360deg); } }
+#ownerView .mark.ov-free { background:var(--surface-2); border:1px solid var(--rule); }
+#ownerView .mark.ov-holdm { background:transparent; border:1.5px dashed var(--hold); }
+#ownerView .mark.ov-nowm { background:transparent; border:2px solid var(--accent); }
+#ownerView .row.click { cursor:pointer; }
+#ownerView .row.click:hover .grow > div:first-child { text-decoration:underline; text-decoration-color:var(--faint); }
+
+/* ── Today (O1) ── */
+#ownerView .ov-focal { padding:26px 30px 24px; }
+#ownerView .ov-focal .big { margin:8px 0 8px; }
+#ownerView .ov-strip { display:grid; grid-template-columns:repeat(17,minmax(0,1fr)); gap:4px; margin-top:24px; }
+#ownerView .ov-strip .h { height:44px; border-radius:6px; background:var(--surface-2); position:relative; display:grid; place-items:center; color:var(--muted); }
+#ownerView .ov-strip .h.bk { background:var(--chc); }
+#ownerView .ov-strip .h.hold { background:transparent; border:1.5px dashed var(--hold); }
+#ownerView .ov-strip .h.blk { background:transparent; border:1px dashed var(--faint); }
+#ownerView .ov-strip .h.past { opacity:.4; }
+#ownerView .ov-strip .h.now { outline:2px solid var(--accent); outline-offset:2px; opacity:1; }
+#ownerView .ov-strip .h i { position:absolute; bottom:-20px; left:0; font-style:normal; font-size:11px; color:var(--muted); white-space:nowrap; }
+#ownerView .ov-legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:34px; font-size:12.5px; color:var(--muted); }
+
+#ownerView .ov-split { display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; margin:4px 0 8px; }
+#ownerView .ov-split .ov-none { flex:1; background:var(--surface-2); }
+#ownerView .ov-srow { padding:7px 0; }
+#ownerView .ov-srow .ov-fee { width:96px; }
+
+#ownerView .ov-cmd { display:flex; gap:10px; align-items:stretch; }
+#ownerView .ov-cmd input { flex:1; min-width:0; font:500 17px/1.3 var(--ui); padding:13px 16px; border:1.5px solid var(--muted); border-radius:10px; background:var(--bg); }
+#ownerView .ov-cmd input:focus { border-color:var(--ink); }
+#ownerView .ov-cmd .btn.primary { padding:0 24px; }
+#ownerView #micBtn.rec { color:var(--alert); border-color:var(--alert); }
+#ownerView .ov-examples { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+#ownerView .ov-examples .chip { font-size:13px; padding:5px 11px; color:var(--ink); background:var(--surface-2); }
+#ownerView .ov-check { display:inline-flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--muted); cursor:pointer; }
+#ownerView .ov-check input { width:auto; accent-color:var(--muted); }
+#ownerView .ov-reply { margin-top:12px; padding:12px 14px; border:1px solid var(--rule); border-radius:var(--r-sm); background:var(--surface-2); font-size:14px; }
+#ownerView .ov-reply .m { color:var(--muted); font-size:12.5px; margin-top:4px; }
+
+/* ── Slots (O2) ── */
+#ownerView .ov-stats { display:flex; gap:28px; align-items:baseline; margin-top:22px; flex-wrap:wrap; }
+#ownerView .ov-stats .seg { align-self:center; }
+#ownerView .ov-g2 { margin-top:16px; }
+#ownerView .ov-boardcard { padding:14px 16px 16px; }
+#ownerView .ov-boardcard .card-h { padding:4px 4px 0; }
+#ownerView .ov-boardwrap { overflow-x:auto; }
+table.ov-board { width:100%; border-collapse:separate; border-spacing:4px; font-size:13px; table-layout:fixed; min-width:760px; }
+.ov-board th { text-align:left; font-weight:500; color:var(--ink); font-size:13px; padding:0 9px 6px; }
+.ov-board th span { display:block; font-weight:400; color:var(--muted); font-size:12px; }
+.ov-board th:first-child { width:78px; }
+.ov-board td { padding:6px 9px; border-radius:6px; background:var(--surface-2); color:var(--muted); font-variant-numeric:tabular-nums; height:44px; vertical-align:middle; cursor:pointer; border:1px solid transparent; }
+.ov-board td .p { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px; }
+.ov-board td .n { font-size:11.5px; color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:15px; }
+.ov-board td.free .p { color:var(--ink); opacity:.82; }
+.ov-board td.free:hover { border-color:var(--faint); }
+.ov-board td.free .disc { color:var(--ok); font-size:12px; }
+.ov-board td.free .spark { color:var(--hold); display:inline-flex; }
+.ov-board td.free .spark .i { width:13px; height:13px; }
+.ov-board td.hr { background:transparent; color:var(--ink); font-weight:600; padding-left:0; cursor:default; }
+.ov-board td.hr span { display:block; font-weight:400; color:var(--muted); font-size:11.5px; }
+.ov-board td.bk { background:var(--surface); color:var(--ink); border:1px solid var(--rule); box-shadow:inset 3px 0 0 var(--chc); font-weight:600; }
+.ov-board td.bk .n { color:var(--muted); font-weight:400; }
+.ov-board td.taken { background:transparent; border:1px dashed var(--rule); }
+.ov-board td.hold { background:transparent; border:1.5px dashed var(--hold); color:var(--hold); }
+.ov-board td.hold .n { color:var(--muted); }
+.ov-board td.closed { background:transparent; border:1px solid var(--rule); color:var(--ink); }
+.ov-board td.closed .i { width:13px; height:13px; color:var(--muted); }
+.ov-board td.gone { background:transparent; cursor:default; }
+.ov-board td.flash { border-color:var(--alert); color:var(--alert); }
+.ov-board tr.past td:not(.hr) { opacity:.4; }
+.ov-board tr.past td.hr { color:var(--muted); }
+.ov-board tr.now td.hr { color:var(--accent); }
+.ov-board tr.now td.hr span { color:var(--accent); }
+#ownerView .ov-foot { margin:12px 4px 0; color:var(--muted); font-size:12.5px; }
+#ownerView .ov-foot + .ov-foot { margin-top:4px; color:var(--faint); }
+
+/* ── Pricing ── */
+#ownerView .ov-sum { display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--rule); font-size:14px; }
+#ownerView .ov-reasons > .mut { font-size:14px; }
+#ownerView .ov-reason .right { white-space:nowrap; }
+#ownerView .ov-reason .ov-old { color:var(--muted); text-decoration:line-through; }
+table.ov-rules { width:100%; border-collapse:collapse; font-size:13.5px; margin-bottom:18px; }
+table.ov-rules:last-child { margin-bottom:0; }
+.ov-rules th { text-align:left; font-weight:500; color:var(--muted); font-size:12.5px; padding:0 8px 8px 0; }
+.ov-rules td { padding:9px 8px 9px 0; border-top:1px solid var(--rule); vertical-align:top; font-variant-numeric:tabular-nums; }
+.ov-rules td .mut { font-size:12px; margin-top:2px; }
+.ov-rules .right { text-align:right; padding:9px 0 9px 14px; white-space:nowrap; }
+.ov-rules th.right { padding:0 0 8px 14px; }
+
+/* ── Channel sync ── */
+#ownerView .ov-explain { color:var(--muted); font-size:13px; margin:0 0 12px; }
+#ownerView .ov-syncstats { display:flex; flex-wrap:wrap; gap:6px 20px; font-size:13px; color:var(--muted); padding-bottom:10px; border-bottom:1px solid var(--rule); }
+#ownerView .ov-syncstats b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+#ownerView .ov-feed { max-height:560px; overflow-y:auto; }
+#ownerView .ov-prow { display:grid; grid-template-columns:76px minmax(0,1fr) auto; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--rule); font-size:13.5px; }
+#ownerView .ov-prow .w small { display:block; color:var(--faint); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+#ownerView .ov-prow .st { font-size:12.5px; color:var(--muted); display:inline-flex; align-items:center; gap:5px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+#ownerView .ov-prow .st.acked .i { color:var(--ok); width:14px; height:14px; }
+#ownerView .ov-prow .st.retrying { color:var(--hold); }
+#ownerView .ov-prow.new { animation:ov-new 1.2s ease-out; }
+@keyframes ov-new { from { background:var(--surface-2); } }
+#ownerView .ov-pill { font:500 11px/1 var(--mono); letter-spacing:.02em; padding:4px 7px; border-radius:6px; border:1px solid currentColor; text-align:center; color:var(--muted); }
+#ownerView .ov-pill.BLOCK { color:var(--alert); }
+#ownerView .ov-pill.UNBLOCK { color:var(--ok); }
+#ownerView .ov-pill.PRICE { color:var(--hold); }
+#ownerView .ov-pill.CONFIRM { color:var(--ink); }
+#ownerView .ov-act { font:12.5px/1.5 var(--mono); color:var(--muted); padding-top:6px; }
+#ownerView .ov-act div { padding:3px 0; white-space:pre-wrap; word-break:break-word; }
+#ownerView .ov-act time { color:var(--faint); margin-right:10px; }
+#ownerView .ov-act .err { color:var(--alert); }
+#ownerView .ov-act .warn { color:var(--hold); }
+#ownerView .ov-act .ok { color:var(--ok); }
+#ownerView .ov-act .ai { color:var(--ink); }
+
+#ownerView .ov-wa { display:flex; flex-direction:column; }
+#ownerView .ov-wa-head { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--rule); border-bottom:0; border-radius:var(--r-sm) var(--r-sm) 0 0; background:var(--surface-2); }
+#ownerView .ov-wa-head b { font-size:14px; }
+#ownerView .ov-wa-head small { display:block; color:var(--muted); font-size:12px; }
+#ownerView .ov-avatar { width:34px; height:34px; border-radius:50%; background:var(--bg); border:1px solid var(--rule); display:grid; place-items:center; font-weight:600; font-size:13px; flex:none; }
+#ownerView .ov-wa-body { height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:14px 12px; border:1px solid var(--rule); background:var(--bg); }
+#ownerView .ov-wa-body .empty { text-align:center; margin:auto 0; }
+#ownerView .bub { max-width:84%; padding:8px 12px 6px; border-radius:12px; font-size:13.5px; line-height:1.42; white-space:pre-wrap; word-wrap:break-word; }
+#ownerView .bub.bot { align-self:flex-start; background:var(--surface-2); border-top-left-radius:4px; }
+#ownerView .bub.user { align-self:flex-end; border:1px solid var(--rule); background:var(--surface); border-top-right-radius:4px; }
+#ownerView .bub .t { display:block; text-align:right; font-size:10.5px; color:var(--faint); margin-top:2px; }
+#ownerView .bub a { color:var(--ink); word-break:break-all; }
+#ownerView .wbtns { align-self:flex-start; display:flex; flex-wrap:wrap; gap:6px; max-width:84%; }
+#ownerView .wbtns .chip { color:var(--ink); padding:5px 11px; }
+#ownerView .typing { align-self:flex-start; background:var(--surface-2); border-radius:12px; padding:10px 12px; display:flex; gap:4px; }
+#ownerView .typing i { width:6px; height:6px; border-radius:50%; background:var(--muted); animation:ov-blink 1s infinite; }
+#ownerView .typing i:nth-child(2) { animation-delay:.15s; }
+#ownerView .typing i:nth-child(3) { animation-delay:.3s; }
+@keyframes ov-blink { 50% { opacity:.25; } }
+#ownerView .ov-wa-comp { display:flex; gap:8px; padding:10px; border:1px solid var(--rule); border-top:0; border-radius:0 0 var(--r-sm) var(--r-sm); background:var(--surface-2); }
+#ownerView .ov-wa-comp input { flex:1; min-width:0; }
+#ownerView .ov-wa .ov-examples { margin:12px 0 12px; }
+#ownerView .ov-wa .ov-explain { margin:0; }
+
+@media (max-width:1000px) {
+  #ownerView .ov-strip i { display:none; }
+  #ownerView .ov-cmd { flex-wrap:wrap; }
+  #ownerView .ov-cmd input { flex-basis:100%; }
+}
+
+/* Folded past hours on the Slots board */
+.ov-board tr.fold td.foldcell { background:transparent; border:1px dashed var(--rule); color:var(--muted); font-size:13px; }
+.ov-board tr.fold td.foldcell { display:table-cell; }
+.ov-board tr.fold .foldcell span { margin-right:12px; }
+.ov-board tr.fold td.foldcell button { float:right; margin:-4px 0; }
+.ov-board tr.fold td:not(.hr) { opacity:1; }

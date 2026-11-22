@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TurfOS · Design options</title>
+<title>VenueBuddy · Design options</title>
 <!-- Preview only: fonts load from Google Fonts here. The real build self-hosts them (no CDN on stage). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Instrument+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500&display=swap" rel="stylesheet">
@@ -170,7 +170,7 @@ const upcoming = BK.filter(b=>b.day==='tomorrow'||b.h>=NOW);
 const chrome = (role, navOn, body) => `
 <div class="app">
   <div class="top">
-    <div><div class="brand">TurfOS</div><div class="venue">Kickoff Arena, Koramangala · 5-a-side</div></div>
+    <div><div class="brand">VenueBuddy</div><div class="venue">Kickoff Arena, Koramangala · 5-a-side</div></div>
     <nav class="nav">${(role==='owner'?['Today','Slots','Pricing','Customers','Channel sync']:['Desk','Calendar','WhatsApp']).map(n=>`<a href="#" class="${n===navOn?'on':''}">${n}${n==='WhatsApp'?'<span class="badge">2</span>':''}</a>`).join('')}</nav>
     <div class="status"><span class="dot"></span>All channels in sync</div>
     <div class="who"><span class="${role==='owner'?'on':''}">Owner</span><span class="${role==='staff'?'on':''}">Front desk</span></div>
@@ -228,7 +228,7 @@ const OWNER = {
         </table>
       </section>
       <aside style="grid-column:span 3;display:flex;flex-direction:column;gap:20px">
-        <div class="card"><div class="h2">Tell TurfOS</div>
+        <div class="card"><div class="h2">Tell VenueBuddy</div>
           <div class="cmd"><input style="font-size:15px;padding:12px" placeholder="aaj raat 9 baje sab band karo"></div>
           <div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Speak</button><button class="btn primary" style="flex:1">Run</button></div></div>
         <div class="card"><div class="h2">Latest</div><div class="feed" style="font-size:13.5px">
@@ -242,7 +242,7 @@ const OWNER = {
     html: () => chrome('owner','Today', `
     <div class="grid">
       <section style="grid-column:2 / span 10;padding:24px 0 8px">
-        <div class="label" style="margin-bottom:10px">Tell TurfOS what to change. Hindi, Hinglish or English.</div>
+        <div class="label" style="margin-bottom:10px">Tell VenueBuddy what to change. Hindi, Hinglish or English.</div>
         <div class="cmd"><input placeholder="kal shaam 7 se 9 Hurdle pe band karo"><button class="btn" style="padding:0 20px">Speak</button><button class="btn primary" style="padding:0 26px">Run</button></div>
         <div class="examples"><span class="chip">aaj dopahar 12 se 4 WhatsApp pe 20% discount do</span><span class="chip">आज रात 9 बजे सब चैनल पर बंद करो</span><span class="chip">Fill the empty afternoon slots</span></div>
       </section>

@@ -1,220 +1,354 @@
-// VenueBuddy · front-desk (staff) view
+// VenueBuddy · front-desk (staff) view: Desk (S1 Next up), Calendar (S2 Day sheet), WhatsApp (S3 Desk and inbox)
 // Markup for #staffView lives here so each view owns its own HTML.
 document.getElementById('staffView').innerHTML = `
-  <section class="stats">
-    <div class="kpi blue"><div class="l">Next arrival</div><div class="v sm" id="sNext">—</div><div class="s" id="sNextSub">—</div></div>
-    <div class="kpi"><div class="l">Today's bookings</div><div class="v num" id="sToday">0</div><div class="s" id="sTodaySub">—</div></div>
-    <div class="kpi good"><div class="l">Checked in</div><div class="v num" id="sIn">0</div><div class="s" id="sInSub">—</div></div>
-    <div class="kpi warn"><div class="l">WhatsApp queries to answer</div><div class="v num" id="sQ">0</div><div class="s" id="sQSub">—</div></div>
+  <section class="desk" data-panel="desk">
+    <div class="topline">
+      <div class="sub" id="dkLine"></div>
+      <div class="hstack"><button class="btn tall" id="qPhone">+ Phone booking</button><button class="btn primary tall" id="qWalk">+ Walk-in</button></div>
+    </div>
+    <div class="grid">
+      <section class="card span-12 hero" id="dkNext" aria-live="polite"></section>
+      <section class="card span-8"><div class="card-h">Rest of today <span class="label" id="dkRestN"></span></div><div id="dkRest"></div></section>
+      <div class="span-4 stack">
+        <section class="card"><div class="card-h" id="dkFreeH">Free tonight</div><div id="dkFree"></div></section>
+        <div class="note wa-note" id="dkWa"></div>
+      </div>
+    </div>
   </section>
-  <main class="smain">
-    <section class="card cal-card">
-      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--red)"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zM5 9v11h14V9z"/></svg>Bookings Calendar
-        <span class="aside">Tap a booking for details · tap a free slot to add a walk-in</span></h3>
-      <div class="legend">
-        <span><i class="dot" style="background:var(--wa)"></i>WhatsApp</span>
-        <span><i class="dot" style="background:var(--blue)"></i>App (aggregator)</span>
-        <span><i class="dot" style="background:var(--gray)"></i>Walk-in / phone</span>
-        <span><i class="dot" style="background:var(--green)"></i>Checked in</span>
-        <span><i class="dot" style="background:var(--orange)"></i>Payment pending</span>
-      </div>
-      <div class="cal" id="cal"></div>
-    </section>
 
-    <section class="card">
-      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--blue)"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 12c5 0 9 2.5 9 5.5V22H3v-2.5C3 16.5 7 14 12 14z"/></svg>Front Desk</h3>
-      <div class="quick">
-        <button class="primary" id="qWalk">+ Walk-in</button>
-        <button id="qPhone">+ Phone booking</button>
-      </div>
-      <div class="sub">Arriving next · today</div>
-      <div class="list" id="upNext"></div>
-      <div class="sub">On the turf now</div>
-      <div class="list" id="onTurf"></div>
-      <div class="sub">Free today · tap to book</div>
-      <div class="chips" id="freeToday"></div>
-    </section>
+  <section class="cal" data-panel="calendar">
+    <div class="topline">
+      <div class="seg" id="calDay" role="tablist" aria-label="Day"><button data-d="today">Today</button><button data-d="tomorrow">Tomorrow</button></div>
+      <div class="sub" id="calSum"></div>
+    </div>
+    <div class="grid">
+      <section class="card span-8 daysheet" id="cal"></section>
+      <aside class="span-4 rail">
+        <section class="card" id="calNow"></section>
+        <section class="card" id="calWa"></section>
+      </aside>
+    </div>
+  </section>
 
-    <section class="card">
-      <h3><svg class="i" viewBox="0 0 24 24" style="color:var(--wa)"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg>WhatsApp Queries
-        <span class="aside" id="inboxAside"></span></h3>
-      <div class="segmented" id="inboxTabs" style="margin-bottom:8px"><button data-t="need" class="active">Needs reply</button><button data-t="all">All chats</button></div>
-      <div class="inbox" id="inbox"></div>
-      <div id="threadWrap">
+  <section class="wa" data-panel="whatsapp">
+    <div class="grid">
+      <section class="card span-3 inbox-col">
+        <div class="seg full" id="inboxTabs"><button data-t="need">Needs reply</button><button data-t="all">All chats</button></div>
+        <div id="inbox"></div>
+      </section>
+      <section class="card span-5 thread-col" id="threadWrap">
         <div class="thead" id="thead"></div>
         <div class="thread" id="thread"></div>
         <div class="canned" id="canned"></div>
-        <form class="reply-bar" id="replyForm">
-          <input id="replyInput" autocomplete="off" placeholder="Reply as front desk…">
-          <button type="submit" class="primary">Send</button>
+        <form class="reply" id="replyForm">
+          <input id="replyInput" autocomplete="off" placeholder="Reply as front desk">
+          <button type="submit" class="btn primary">Send</button>
         </form>
-      </div>
-    </section>
-  </main>
+      </section>
+      <section class="card span-5 thread-col thread-empty" id="threadNone" hidden><div class="empty">Pick a chat on the left to read and reply.</div></section>
+      <section class="card span-4">
+        <div class="card-h">Today <span class="label" id="waTodayN"></span><span class="spacer"></span><button class="btn sm" id="waWalk">+ Walk-in</button></div>
+        <div id="waToday"></div>
+      </section>
+    </div>
+  </section>
 `;
 
+// ───────── Shared helpers ─────────
+const DOT = '<span class="dot" aria-hidden="true"></span>';
+const mm = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const holdLeft = hd => Math.max(0, Math.round((hd.expires - Date.now()) / 1000));
+const chMark = c => `<span class="mark" style="background:var(--c-${c})"></span>`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const initial = n => esc((String(n || '?').trim()[0] || '?').toUpperCase());
+const shortDate = d => E.dayDate(d).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+const hm = ts => new Date(ts).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }).toUpperCase();
+
+function bookingsOf(d) {
+  return E.HOURS.map(h => ({ d, h, b: S.slots[d][h].booking })).filter(x => x.b && x.b.kind !== 'owner');
+}
+const todaysBookings = () => bookingsOf('today');
+// Next group to arrive today: the earliest booking still waiting for check-in whose slot has not ended.
+const nextArrival = () => todaysBookings().find(x => (x.b.status || 'booked') === 'booked' && x.h + 1 > nowFrac());
+const needReply = () => S.chats.filter(c => c.needsHuman);
+function stChip(b, d, h) {
+  const st = b.status || 'booked';
+  if (st === 'arrived') return '<span class="chip ok">' + I.check + 'Checked in</span>';
+  if (st === 'no_show') return '<span class="chip alert">No-show</span>';
+  if (isLive(d, h)) return '<span class="chip now">Due now</span>';
+  if (isPast(d, h)) return '<span class="chip warn">Not checked in</span>';
+  return '<span class="chip">Booked</span>';
+}
+const holdChip = hd => `<span class="chip warn" data-hold>${I.clock}On hold ${mm(holdLeft(hd))}</span>`;
+const freeOffline = (d, h) => { const s = S.slots[d][h]; return !s.booking && !s.hold && !s.closed.offline && !E.isOver(d, h); };
+// Walk-ins default to today; once today has no free hour left, the sheet opens on tomorrow instead.
+const walkDay = () => E.HOURS.some(h => freeOffline('today', h)) ? 'today' : 'tomorrow';
+const bookingFor = phone => { for (const d of E.DAYS) for (const h of E.HOURS) { const b = S.slots[d][h].booking; if (b && b.phone === phone) return { d, h, b }; } return null; };
+function checkBtn(b, h, d = 'today') {
+  const st = b.status || 'booked';
+  return st === 'booked' ? `<button class="btn sm act" data-st="arrived" data-d="${d}" data-h="${h}">Check in</button>`
+    : `<button class="btn sm quiet act" data-st="booked" data-d="${d}" data-h="${h}">Undo</button>`;
+}
+
 // ───────── Staff render ─────────
-function renderStaff() { renderStaffStats(); renderCalendar(); renderDesk(); renderInbox(); }
-
-function todaysBookings() {
-  return E.HOURS.map(h => ({ d: 'today', h, b: S.slots.today[h].booking })).filter(x => x.b && x.b.kind !== 'owner');
-}
-function renderStaffStats() {
-  const t = todaysBookings(), now = nowFrac();
-  const next = [...t.filter(x => x.b.status === 'booked' && x.h + 1 > now),
-                ...E.HOURS.map(h => ({ d: 'tomorrow', h, b: S.slots.tomorrow[h].booking })).filter(x => x.b && x.b.kind !== 'owner')][0];
-  $('sNext').textContent = next ? `${hShort(next.h)} · ${next.b.customer}` : 'None';
-  $('sNextSub').textContent = next ? `${rel(next.d, next.h)} · ${SRC_LABEL(next.b.channel)}` : 'No upcoming bookings';
-  $('sToday').textContent = t.length;
-  $('sTodaySub').textContent = `${t.filter(x => x.h + 1 > now).length} still to play · ${E.HOURS.filter(h => !S.slots.today[h].booking && !S.slots.today[h].hold && h + 1 > now).length} slots free`;
-  const inn = t.filter(x => x.b.status === 'arrived').length, ns = t.filter(x => x.b.status === 'no_show').length;
-  $('sIn').textContent = inn; $('sInSub').textContent = ns ? `${ns} no-show` : 'No no-shows';
-  const q = S.chats.filter(c => c.needsHuman);
-  $('sQ').textContent = q.length; $('sQSub').textContent = q.length ? q.map(c => c.name).join(', ') : 'All caught up';
+function renderStaff() {
+  setTabCount('whatsapp', needReply().length);
+  renderDesk(); renderCalendar(); renderInbox(); renderWaToday();
 }
 
-function renderCalendar() {
-  const now = nowFrac(), t = Date.now();
-  let html = '<div class="ch"></div>' + E.DAYS.map(d => {
-    const n = E.HOURS.filter(h => S.slots[d][h].booking && S.slots[d][h].booking.kind !== 'owner').length;
-    return `<div class="ch">${E.dayLabel(d)} · ${E.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}<small>${n} booking${n === 1 ? '' : 's'}</small></div>`;
-  }).join('');
-  for (const h of E.HOURS) {
-    html += `<div class="tl">${hShort(h)}</div>`;
-    for (const d of E.DAYS) {
-      const sl = S.slots[d][h], b = sl.booking, hd = sl.hold;
-      const line = d === 'today' && Math.floor(now) === h ? `<div class="nowline" style="top:${(now - h) * ROW_H}px"></div>` : '';
-      let inner;
-      if (b && b.kind === 'owner') inner = `<div class="ev block" data-d="${d}" data-h="${h}"><div class="nm">${I.wrench} Blocked</div><div class="mt">${esc(b.note || 'Owner block')}</div></div>`;
-      else if (b) inner = `<div class="ev ${b.status || ''}" style="--src:${SRC_COLOR[b.channel]}" data-d="${d}" data-h="${h}">
-          <div class="nm">${esc(b.customer)} ${statusChip(b, d, h)}</div>
-          <div class="mt">${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</div></div>`;
-      else if (hd) { const left = Math.max(0, Math.round((hd.expires - t) / 1000));
-        inner = `<div class="ev hold" data-d="${d}" data-h="${h}"><div class="nm">${esc(hd.customer)} <span class="st-chip soon">${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}</span></div><div class="mt">Paying on WhatsApp · ${rupee(hd.price)}</div></div>`; }
-      else if (isPast(d, h)) inner = `<div class="free x">—</div>`;
-      else if (sl.closed.offline) inner = `<div class="free x">Closed by owner</div>`;
-      else inner = `<div class="free" data-free="${d}|${h}"><span>Free</span><span class="plus">+ Walk-in</span></div>`;
-      html += `<div class="cc ${isPast(d, h) ? 'past' : ''}">${line}${inner}</div>`;
-    }
-  }
-  $('cal').innerHTML = html;
-}
-$('cal').addEventListener('click', e => {
-  const f = e.target.closest('[data-free]'); if (f) { const [d, h] = f.dataset.free.split('|'); return openOffline(d, +h, 'walkin'); }
-  const ev = e.target.closest('.ev'); if (ev) openBooking(ev.dataset.d, +ev.dataset.h);
-});
-
+// ───────── Desk (S1 Next up) ─────────
 function renderDesk() {
-  const now = nowFrac(), t = todaysBookings();
-  const up = t.filter(x => x.b.status === 'booked' && x.h + 1 > now).slice(0, 5);
-  $('upNext').innerHTML = up.length ? up.map(({ d, h, b }) => `
-    <div class="item"><div class="when">${hShort(h)}<small>${rel(d, h)}</small></div>
-      <div class="who"><b>${esc(b.customer)}</b><small>${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</small></div>
-      <div class="btns">${h <= now ? `<button class="gray" data-st="no_show" data-h="${h}">No-show</button>` : ''}<button class="go" data-st="arrived" data-h="${h}">Check in</button></div></div>`).join('')
-    : '<div class="empty">No more arrivals today.</div>';
-  const on = t.filter(x => x.b.status === 'arrived' && x.h + 1 > now);
-  $('onTurf').innerHTML = on.length ? on.map(({ d, h, b }) => `
-    <div class="item"><div class="when">${hShort(h)}<small>till ${hShort(h + 1)}</small></div>
-      <div class="who"><b>${esc(b.customer)}</b><small>Checked in ${b.statusAt ? new Date(b.statusAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</small></div>
-      <div class="btns"><button class="gray" data-st="booked" data-h="${h}">Undo</button></div></div>`).join('')
-    : '<div class="empty">Nobody checked in yet.</div>';
-  const free = E.HOURS.filter(h => { const sl = S.slots.today[h]; return h + 1 > now && !sl.booking && !sl.hold && !sl.closed.offline; });
-  $('freeToday').innerHTML = free.length ? free.map(h => `<button class="chip" data-fh="${h}"><b>${hShort(h)}</b> · ${rupee(E.listed(S.slots.today[h], 'today', h, 'offline'))}</button>`).join('')
-    : '<div class="empty">Fully booked for today.</div>';
+  const now = nowFrac(), t = todaysBookings(), next = nextArrival();
+  const inn = t.filter(x => x.b.status === 'arrived').length;
+  $('dkLine').textContent = `${shortDate('today')} · ${plural(t.length, 'booking')} today · ${inn} checked in`;
+
+  if (next) {
+    const { h, b } = next, live = isLive('today', h);
+    $('dkNext').innerHTML = `<div class="label">Next arrival</div>
+      <div class="hero-row">
+        <div class="when">${hShort(h)}</div>
+        <div class="who">
+          <div class="name">${esc(b.customer)}</div>
+          <div class="sub meta">${logo(b.channel, 20)}<span>${SRC_LABEL(b.channel)}${b.kind === 'phone' ? ' (phone call)' : ''}</span><span class="sep">·</span><span>${esc(payLine(b))}</span><span class="sep">·</span><span class="mono">${esc(b.ref)}</span></div>
+          <div class="rel"><span class="chip ${live ? 'now' : ''}">${live ? 'Playing now' : rel('today', h)}</span></div>
+        </div>
+        <div class="actions">
+          <button class="btn lg" data-st="no_show" data-d="today" data-h="${h}" ${h <= now ? '' : 'disabled title="Available once the slot starts"'}>No-show</button>
+          <button class="btn lg primary" data-st="arrived" data-d="today" data-h="${h}">${I.check}Check in</button>
+        </div>
+      </div>`;
+  } else {
+    const tm = bookingsOf('tomorrow')[0];
+    $('dkNext').innerHTML = `<div class="label">Next arrival</div>
+      <div class="hero-empty"><div><div class="name">No more bookings today</div>
+        <div class="sub">${tm ? `Tomorrow starts with ${esc(tm.b.customer)} at ${hShort(tm.h)}.` : 'Nothing booked for tomorrow yet.'}${walkDay() === 'today' ? ' Free hours are still open for walk-ins.' : ''}</div></div>
+        <button class="btn lg" data-walk>+ Walk-in${walkDay() === 'tomorrow' ? ' for tomorrow' : ''}</button></div>`;
+  }
+
+  // Rest of today: every booking and hold except the hero
+  const rows = E.HOURS.map(h => ({ h, sl: S.slots.today[h] })).filter(({ h, sl }) =>
+    (sl.booking && sl.booking.kind !== 'owner' && !(next && next.h === h)) || sl.hold);
+  $('dkRestN').textContent = rows.length ? String(rows.length) : '';
+  $('dkRest').innerHTML = rows.length ? rows.map(({ h, sl }) => {
+    if (sl.hold) return `<div class="row hit" data-open="today|${h}"><div class="t">${hShort(h)}</div>
+      <div class="grow">${esc(sl.hold.customer)}<div class="m">${chMark('whatsapp')}Paying on WhatsApp · ${rupee(sl.hold.price)}</div></div>${holdChip(sl.hold)}</div>`;
+    const b = sl.booking;
+    return `<div class="row hit ${isPast('today', h) ? 'done' : ''}" data-open="today|${h}"><div class="t">${hShort(h)}</div>
+      <div class="grow">${esc(b.customer)}<div class="m">${chMark(b.channel)}${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</div></div>
+      ${stChip(b, 'today', h)}${checkBtn(b, h)}</div>`;
+  }).join('') : `<div class="empty">${next ? 'Nothing else booked today.' : 'No other bookings today.'}</div>`;
+
+  // Free hours left today
+  const free = E.HOURS.filter(h => freeOffline('today', h));
+  $('dkFreeH').textContent = free.length && free[0] < 17 ? 'Free today' : 'Free tonight';
+  const shown = free.slice(0, 6);
+  $('dkFree').innerHTML = free.length ? shown.map(h => `<div class="row hit" data-free="today|${h}"><div class="t">${hShort(h)}</div>
+      <div class="grow m">${rupee(E.listed(S.slots.today[h], 'today', h, 'offline'))} at desk${isLive('today', h) ? ' · now' : ''}</div><button class="btn sm quiet add">Add</button></div>`).join('')
+    + (free.length > shown.length ? `<button class="linkish" data-goto="calendar">${free.length - shown.length} more free hours on the calendar</button>` : '')
+    : `<div class="empty">${E.HOURS.some(h => !E.isOver('today', h)) ? 'Fully booked for the rest of today.' : 'The turf is closed for the night.'}</div>`;
+
+  const q = needReply();
+  $('dkWa').innerHTML = q.length
+    ? `<span>${plural(q.length, 'WhatsApp chat')} ${q.length === 1 ? 'needs' : 'need'} a reply.</span> <button class="linkish" data-goto="whatsapp">Open</button>`
+    : `<span>All WhatsApp chats answered.</span> <button class="linkish" data-goto="whatsapp">Open inbox</button>`;
 }
+
 async function setBkStatus(d, h, st) {
   const r = await api('/api/booking/status', { day: d, hour: h, status: st });
-  if (r.ok) toast(st === 'arrived' ? 'Checked in ✓' : st === 'no_show' ? 'Marked as no-show' : 'Status reset');
+  if (r.ok) toast(st === 'arrived' ? 'Checked in' : st === 'no_show' ? 'Marked as no-show' : 'Status reset');
+  else toast(`Could not update: ${r.error}`);
 }
-$('upNext').onclick = $('onTurf').onclick = e => { const b = e.target.closest('[data-st]'); if (b) setBkStatus('today', +b.dataset.h, b.dataset.st); };
-$('freeToday').onclick = e => { const b = e.target.closest('[data-fh]'); if (b) openOffline('today', +b.dataset.fh, 'walkin'); };
-$('qWalk').onclick = () => openOffline('today', null, 'walkin');
-$('qPhone').onclick = () => openOffline('today', null, 'phone');
 
-// ───────── Booking detail sheet ─────────
-let bkOpen = null;
-function openBooking(d, h) { bkOpen = { d, h }; renderBooking(); if (!$('bkSheet').open) $('bkSheet').showModal(); }
+// One delegated click handler for the whole staff view
+$('staffView').addEventListener('click', e => {
+  const st = e.target.closest('[data-st]');
+  if (st) { e.stopPropagation(); return setBkStatus(st.dataset.d || 'today', +st.dataset.h, st.dataset.st); }
+  const go = e.target.closest('[data-goto]'); if (go) return setTab(go.dataset.goto);
+  const w = e.target.closest('[data-walk]'); if (w) return openOffline(w.dataset.walk ? 'today' : walkDay(), w.dataset.walk ? +w.dataset.walk : null, 'walkin');
+  const f = e.target.closest('[data-free]'); if (f) { const [d, h] = f.dataset.free.split('|'); return openOffline(d, +h, 'walkin'); }
+  const o = e.target.closest('[data-open]'); if (o) { const [d, h] = o.dataset.open.split('|'); return openBooking(d, +h); }
+});
+$('qWalk').onclick = () => openOffline(walkDay(), null, 'walkin');
+$('qPhone').onclick = () => openOffline(walkDay(), null, 'phone');
+$('waWalk').onclick = () => openOffline(walkDay(), null, 'walkin');
+
+// ───────── Calendar (S2 Day sheet) ─────────
+let calDay = 'today', calPastOpen = false;
+function slotRow(d, h, extra = '') {
+  const sl = S.slots[d][h], b = sl.booking, hd = sl.hold, past = isPast(d, h), live = isLive(d, h);
+  const cls = `hr ${live ? 'now' : ''} ${past ? 'past' : ''} ${extra}`;
+  const t = `<div class="t">${hShort(h)}${live ? '<span class="nowtag">Now</span>' : ''}</div>`;
+  if (b && b.kind === 'owner') return `<div class="${cls} hit" data-open="${d}|${h}">${t}<div class="body"><span class="bar" style="background:var(--faint)"></span>
+    <div class="grow"><div class="nm">${I.lock}Closed by owner</div><div class="m">${esc(b.note || 'Owner block')}</div></div></div></div>`;
+  if (b) return `<div class="${cls} hit bk" data-open="${d}|${h}">${t}<div class="body"><span class="bar" style="background:var(--c-${b.channel})"></span>
+    <div class="grow"><div class="nm">${esc(b.customer)}</div><div class="m">${SRC_LABEL(b.channel)} · ${esc(payLine(b))}</div></div>${stChip(b, d, h)}</div></div>`;
+  if (hd) return `<div class="${cls} hit" data-open="${d}|${h}">${t}<div class="body"><span class="bar" style="background:var(--hold)"></span>
+    <div class="grow"><div class="nm">${esc(hd.customer)}</div><div class="m">Paying on WhatsApp · ${rupee(hd.price)}</div></div><span class="chip warn" data-hold>${I.clock}Paying on WhatsApp ${mm(holdLeft(hd))}</span></div></div>`;
+  if (E.isOver(d, h)) return `<div class="${cls}">${t}<div class="body"><div class="grow m">Past · not booked</div></div></div>`;
+  if (sl.closed.offline) return `<div class="${cls}">${t}<div class="body"><div class="grow m">${I.lock}Closed by owner</div></div></div>`;
+  return `<div class="${cls} hit free" data-free="${d}|${h}">${t}<div class="body"><div class="grow m">Free · ${rupee(E.listed(sl, d, h, 'offline'))}</div><span class="btn sm add">+ Add walk-in</span></div></div>`;
+}
+function renderCalendar() {
+  document.querySelectorAll('#calDay button').forEach(b => {
+    const on = b.dataset.d === calDay; b.classList.toggle('on', on); b.setAttribute('aria-selected', on);
+    b.textContent = `${E.dayLabel(b.dataset.d)} · ${E.dayDate(b.dataset.d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' })}`;
+  });
+  const d = calDay, list = bookingsOf(d);
+  const freeN = E.HOURS.filter(h => freeOffline(d, h)).length;
+  $('calSum').textContent = `${plural(list.length, 'booking')} · ${freeN} free ${freeN === 1 ? 'hour' : 'hours'} left`;
+
+  let html = '';
+  const past = d === 'today' ? E.HOURS.filter(h => E.isOver(d, h)) : [];
+  if (past.length) {
+    const who = past.map(h => S.slots.today[h].booking).filter(b => b && b.kind !== 'owner')
+      .map(b => `${esc(b.customer)}, ${{ arrived: 'checked in', no_show: 'no-show' }[b.status] || 'not checked in'}`);
+    html += `<button class="hr past fold" id="calFold" aria-expanded="${calPastOpen}"><div class="t wide">${hShort(past[0])} to ${hShort(past[past.length - 1])}</div>
+      <div class="body"><div class="grow m">Earlier today · ${who.length ? who.join(' · ') : 'no bookings'}</div><span class="linkish">${calPastOpen ? 'Hide' : 'Show'}</span></div></button>`;
+    if (calPastOpen) html += past.map(h => slotRow(d, h, 'earlier')).join('');
+  }
+  html += E.HOURS.filter(h => !past.includes(h)).map(h => slotRow(d, h)).join('');
+  if (d === 'today' && !E.HOURS.some(h => !E.isOver(d, h))) html += '<div class="empty pad">The turf is closed for the night. Switch to Tomorrow to plan ahead.</div>';
+  $('cal').innerHTML = html;
+  renderRail();
+}
+function renderRail() {
+  const now = nowFrac(), cur = Math.floor(now), next = nextArrival();
+  const open = E.HOURS.includes(cur);
+  let state = 'Closed', sub = '';
+  if (open) {
+    const sl = S.slots.today[cur], b = sl.booking;
+    state = b ? (b.kind === 'owner' ? 'Closed by owner' : esc(b.customer)) : sl.hold ? 'On hold' : sl.closed.offline ? 'Closed by owner' : 'Free';
+    if (b && b.kind !== 'owner') sub = `${{ arrived: 'Checked in', no_show: 'No-show' }[b.status] || 'Not checked in yet'} · `;
+  }
+  const upcoming = next && !(open && next.h === cur) ? next : todaysBookings().find(x => x.h > cur && (x.b.status || 'booked') === 'booked');
+  sub += upcoming ? `Next: ${esc(upcoming.b.customer)} at ${hShort(upcoming.h)}` : 'No more arrivals today';
+  const wh = E.HOURS.find(h => freeOffline('today', h));
+  const btn = wh != null ? `<button class="btn primary tall full" data-walk="${wh}">+ Walk-in for ${hShort(wh)}</button>`
+    : `<button class="btn tall full" data-walk>+ Walk-in for tomorrow</button>`;
+  $('calNow').innerHTML = `<div class="label">Now</div><div class="num now-num">${open ? hShort(cur) : 'After hours'} · ${state}</div><div class="sub">${sub}</div>${btn}`;
+  const q = needReply();
+  $('calWa').innerHTML = `<div class="card-h">WhatsApp ${q.length ? `<span class="count">${q.length}</span>` : ''}</div>` +
+    (q.length ? q.map(c => { const m = [...c.msgs].reverse().find(x => x.from === 'user');
+      return `<div class="wa-line"><b>${esc(c.name)}</b> <span class="m">${esc((m ? m.text : '').split('\n')[0])}</span></div>`; }).join('')
+      + '<button class="linkish" data-goto="whatsapp">Open inbox</button>'
+      : '<div class="m sub">No chats waiting. The bot is handling bookings.</div>');
+}
+$('calDay').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { calDay = b.dataset.d; renderCalendar(); } };
+$('cal').addEventListener('click', e => { if (e.target.closest('#calFold')) { calPastOpen = !calPastOpen; renderCalendar(); } });
+
+// ───────── Booking detail sheet (markup in sheets.js) ─────────
+let bkOpen = null, bkConfirm = false;
+function openBooking(d, h) { bkOpen = { d, h }; bkConfirm = false; renderBooking(); if (!$('bkSheet').open) $('bkSheet').showModal(); }
 function renderBooking() {
   if (!bkOpen) return; const { d, h } = bkOpen, sl = S.slots[d][h], b = sl.booking, hd = sl.hold;
   $('bkTitle').textContent = `${E.dayLabel(d)} · ${E.hLabel(h)}`;
   if (!b && !hd) { $('bkBody').innerHTML = '<div class="empty">This slot is free now.</div>'; return; }
-  if (!b) { $('bkBody').innerHTML = `<div class="kv"><span>Customer</span><b>${esc(hd.customer)}</b><span>Status</span><b>Paying on WhatsApp (${hd.ref})</b><span>Amount</span><b>${rupee(hd.price)}</b></div>
-      <div class="note">The slot is held for this customer until they pay. It's blocked on the apps meanwhile.</div>`; return; }
-  const phone = realPhone(b.phone), chat = chatOf(b.phone), st = b.status || 'booked';
-  const owner = b.kind === 'owner';
-  $('bkBody').innerHTML = `<div class="kv">
-      <span>Customer</span><b>${esc(b.customer)}</b>
-      ${phone ? `<span>Phone</span><b>${esc(phone)}</b>` : ''}
-      <span>Booked via</span><b>${owner ? 'Owner' : SRC_LABEL(b.channel)}${b.kind === 'phone' ? ' (phone call)' : ''}</b>
-      <span>Reference</span><b>${esc(b.ref)}</b>
-      <span>Payment</span><b>${esc(payLine(b))}</b>
-      ${owner ? '' : `<span>Status</span><b>${{ booked: isLive(d, h) ? 'Expected now' : 'Upcoming', arrived: '✓ Checked in', no_show: 'No-show' }[st]}</b>`}
-    </div>
-    ${owner ? '<div class="note">Blocked by the owner. Only the owner can remove it.</div>' : `
+  if (!b) {
+    $('bkBody').innerHTML = `<div class="bk-who"><div class="name">${esc(hd.customer)}</div>${holdChip(hd)}</div>
+      <dl class="kv"><dt>Booked via</dt><dd>${logo('whatsapp', 18)}WhatsApp</dd><dt>Reference</dt><dd class="mono">${esc(hd.ref)}</dd><dt>Amount</dt><dd>${rupee(hd.price)}</dd></dl>
+      <div class="note">The slot is held for this customer until they pay. It is blocked on the apps meanwhile.</div>`; return;
+  }
+  const phone = realPhone(b.phone), chat = chatOf(b.phone), st = b.status || 'booked', owner = b.kind === 'owner';
+  const started = d === 'today' && h <= nowFrac();
+  const kv = `<dl class="kv">
+      ${phone ? `<dt>Phone</dt><dd>${esc(phone)}</dd>` : ''}
+      <dt>Booked via</dt><dd>${owner ? 'Owner' : `${logo(b.channel, 18)}${SRC_LABEL(b.channel)}${b.kind === 'phone' ? ' (phone call)' : ''}`}</dd>
+      <dt>Reference</dt><dd class="mono">${esc(b.ref)}</dd>
+      <dt>${owner ? 'Reason' : 'Payment'}</dt><dd>${esc(payLine(b))}</dd>
+      ${owner ? '' : `<dt>Status</dt><dd>${{ booked: isLive(d, h) ? 'Expected now' : isPast(d, h) ? 'Not checked in' : 'Upcoming', arrived: 'Checked in', no_show: 'No-show' }[st]}</dd>`}
+    </dl>`;
+  const who = `<div class="bk-who"><div class="name">${owner ? 'Closed by owner' : esc(b.customer)}</div>${owner ? '' : stChip(b, d, h)}</div>`;
+  if (owner) { $('bkBody').innerHTML = who + kv + '<div class="note">Blocked by the owner. Only the owner can remove it.</div>'; return; }
+  if (bkConfirm) {
+    $('bkBody').innerHTML = who + `<div class="confirm"><b>Cancel ${esc(b.ref)} for ${esc(b.customer)}?</b><div class="sub">The slot reopens on every channel. This cannot be undone.</div>
+      <div class="acts"><button class="btn tall" data-a="keep">Keep booking</button><button class="btn tall danger-solid" data-a="cancel-yes">Yes, cancel booking</button></div></div>`;
+    return;
+  }
+  $('bkBody').innerHTML = who + kv + `
     <div class="acts">
-      ${st !== 'arrived' ? `<button class="go" data-a="arrived">Check in</button>` : ''}
-      ${st === 'booked' && !isPast(d, h) && d === 'today' && h <= nowFrac() ? `<button class="gray" data-a="no_show">No-show</button>` : ''}
-      ${st !== 'booked' ? `<button class="gray" data-a="booked">Undo</button>` : ''}
+      ${st !== 'arrived' ? `<button class="btn primary tall" data-a="arrived">${I.check}Check in</button>` : ''}
+      ${st === 'booked' && started ? `<button class="btn tall" data-a="no_show">No-show</button>` : ''}
+      ${st !== 'booked' ? `<button class="btn tall" data-a="booked">Undo</button>` : ''}
     </div>
     <div class="acts">
-      ${chat ? `<button data-a="chat">Open WhatsApp chat</button>` : ''}
-      ${phone ? `<button class="gray" data-a="call">Call</button>` : ''}
-      <button class="danger" data-a="cancel">Cancel booking</button>
-    </div>`}`;
+      ${chat ? `<button class="btn tall" data-a="chat">Open WhatsApp chat</button>` : ''}
+      ${phone ? `<button class="btn tall" data-a="call">Call</button>` : ''}
+    </div>
+    <div class="acts end"><button class="btn quiet danger" data-a="cancel">Cancel booking</button></div>`;
 }
 $('bkBody').onclick = async e => {
   const a = e.target.closest('[data-a]')?.dataset.a; if (!a || !bkOpen) return; const { d, h } = bkOpen, b = S.slots[d][h].booking;
+  if (!b) return;
   if (['arrived', 'no_show', 'booked'].includes(a)) return setBkStatus(d, h, a);
-  if (a === 'chat') { $('bkSheet').close(); staffChat = b.phone; inboxTab = 'all'; threadKey = null; renderInbox(); $('replyInput').focus(); return; }
+  if (a === 'chat') { $('bkSheet').close(); staffChat = b.phone; inboxTab = 'all'; threadKey = null; if (role === 'staff') setTab('whatsapp'); renderInbox(); $('replyInput').focus(); return; }
   if (a === 'call') { location.href = 'tel:' + realPhone(b.phone).replace(/[^\d+]/g, ''); return; }
-  if (a === 'cancel' && confirm(`Cancel ${b.ref} for ${b.customer}? The slot reopens on every channel.`)) { await api('/api/cancel', { day: d, hour: h }); $('bkSheet').close(); toast(`Cancelled ${b.ref}`); }
+  if (a === 'cancel') { bkConfirm = true; return renderBooking(); }
+  if (a === 'keep') { bkConfirm = false; return renderBooking(); }
+  if (a === 'cancel-yes') { const r = await api('/api/cancel', { day: d, hour: h }); $('bkSheet').close(); toast(r.ok ? `Cancelled ${b.ref}. The slot is open again.` : `Could not cancel: ${r.error}`); }
 };
 $('bkClose').onclick = () => $('bkSheet').close();
-$('bkSheet').addEventListener('close', () => { bkOpen = null; });
+$('bkSheet').addEventListener('close', () => { bkOpen = null; bkConfirm = false; });
 
-// ───────── WhatsApp query inbox ─────────
+// ───────── WhatsApp (S3 Desk and inbox) ─────────
 let staffChat = null, inboxTab = 'need', threadKey = null;
-const CANNED = ['Haan, free parking hai 🚗', 'Shoes ₹50 mein rent pe milte hain 👟', 'Bibs aur ball desk pe free milenge ⚽', 'Thoda wait kijiye, check karke batata hoon 🙏'];
+const CANNED = ['Haan, free parking hai', 'Shoes ₹50 mein rent pe milte hain', 'Bibs aur ball desk pe free milenge', 'Thoda wait kijiye, check karke batata hoon'];
 function renderInbox() {
   const all = [...S.chats].sort((a, b) => (b.needsHuman - a.needsHuman) || (b.lastTs - a.lastTs));
   const list = inboxTab === 'need' ? all.filter(c => c.needsHuman || c.unread) : all;
   const need = all.filter(c => c.needsHuman).length;
-  $('inboxAside').textContent = `${all.length} chat${all.length === 1 ? '' : 's'}`;
-  document.querySelectorAll('#inboxTabs button').forEach(b => { b.classList.toggle('active', b.dataset.t === inboxTab); if (b.dataset.t === 'need') b.textContent = `Needs reply${need ? ' · ' + need : ''}`; });
+  document.querySelectorAll('#inboxTabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === inboxTab); if (b.dataset.t === 'need') b.textContent = `Needs reply${need ? ' · ' + need : ''}`; });
   if (!staffChat || !S.chats.find(c => c.phone === staffChat)) staffChat = (list[0] || all[0])?.phone || null;
   $('inbox').innerHTML = list.length ? list.map(c => {
     const last = c.msgs[c.msgs.length - 1];
-    const when = c.lastTs ? new Date(c.lastTs).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
-    return `<div class="conv ${c.phone === staffChat ? 'sel' : ''}" data-p="${esc(c.phone)}"><div class="avatar">${esc(c.name.slice(0, 2).toUpperCase())}</div>
-      <div><b>${esc(c.name)}${c.real ? ' · live' : ''}</b><small>${last ? (last.from === 'user' ? '' : last.from === 'staff' ? 'You: ' : 'Bot: ') + esc(last.text.split('\n')[0]) : 'No messages'}</small></div>
-      <div class="r">${when}${c.unread ? `<span class="unread">${c.unread}</span>` : ''}${c.needsHuman ? '<span class="flag">Needs reply</span>' : c.human ? '<span class="flag">You</span>' : ''}</div></div>`;
-  }).join('') : '<div class="empty">No queries waiting. The bot handled everything. 🎉</div>';
+    return `<button class="conv ${c.phone === staffChat ? 'sel' : ''}" data-p="${esc(c.phone)}"><span class="avatar">${initial(c.name)}</span>
+      <span class="grow"><span class="nm"><b>${esc(c.name)}</b>${c.real ? '<span class="live">Live</span>' : ''}</span>
+        <span class="last">${last ? (last.from === 'user' ? '' : last.from === 'staff' ? 'You: ' : 'Bot: ') + esc(last.text.split('\n')[0]) : 'No messages'}</span></span>
+      <span class="r"><span class="when">${c.lastTs ? hm(c.lastTs) : ''}</span>${c.unread ? `<span class="count">${c.unread}</span>` : ''}</span></button>`;
+  }).join('') : '<div class="empty">No chats need a reply. The bot handled everything.</div>';
   renderThread();
 }
 function renderThread() {
   const c = S.chats.find(x => x.phone === staffChat);
-  $('threadWrap').hidden = !c; if (!c) return;
-  $('thead').innerHTML = `<div class="avatar" style="width:30px;height:30px;font-size:12px">${esc(c.name.slice(0, 2).toUpperCase())}</div><div><b>${esc(c.name)}</b><div class="mut" style="font-size:12px">${c.human ? 'You are replying · bot paused' : 'Bot is answering bookings'}</div></div>
-    <span style="flex:1"></span>
-    ${c.needsHuman ? '<button class="gray" id="resolveBtn" style="min-height:30px;font-size:13px">Mark done</button>' : ''}
-    <label class="switch" style="margin-left:6px" title="When off, the bot stops replying and you handle this chat">Bot <input type="checkbox" id="botSw" ${c.human ? '' : 'checked'}></label>`;
-  const key = c.phone + ':' + c.msgs.length + ':' + c.typing;
+  $('threadWrap').hidden = !c; $('threadNone').hidden = !!c; if (!c) return;
+  const bk = bookingFor(c.phone);
+  $('thead').innerHTML = `<span class="avatar">${initial(c.name)}</span>
+    <div class="grow"><b>${esc(c.name)}</b><div class="m">${bk ? `Booked ${hShort(bk.h)} ${bk.d} · <span class="mono">${esc(bk.b.ref)}</span>` : c.real ? 'Live WhatsApp chat' : 'No booking yet'}</div></div>
+    <button class="toggle" id="botSw" role="switch" aria-checked="${!c.human}" title="When off, the bot stops replying and you handle this chat">Bot ${c.human ? 'off' : 'on'}<i></i></button>
+    ${c.needsHuman ? '<button class="btn sm" id="resolveBtn">Mark done</button>' : ''}`;
+  const key = c.phone + ':' + c.msgs.length + ':' + c.typing + ':' + c.human;
   if (threadKey !== key) {
     threadKey = key;
-    $('thread').innerHTML = c.msgs.map(m => {
-      const t = new Date(m.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      const by = m.from === 'user' ? '' : `<span class="by">${m.from === 'staff' ? 'Front desk' : 'Bot'}</span>`;
-      return `<div class="bub ${m.from}${m.from === 'bot' ? ' mine' : ''}">${by}${esc(m.text)}<span class="t">${t}</span></div>`;
+    $('thread').innerHTML = (c.human ? '<div class="sys">You are replying. The bot is paused for this chat.</div>' : '') + c.msgs.map(m => {
+      const out = m.from !== 'user';
+      return `<div class="msg ${out ? 'out' : ''} ${m.from}">${esc(m.text)}<small>${out ? (m.from === 'staff' ? 'Front desk' : 'Bot') + ' · ' : ''}${hm(m.ts)}</small></div>`;
     }).join('') + (c.typing ? '<div class="typing"><i></i><i></i><i></i></div>' : '');
     $('thread').scrollTop = $('thread').scrollHeight;
   }
-  $('canned').innerHTML = CANNED.map(x => `<button class="chip">${esc(x)}</button>`).join('');
-  if (c.unread && !$('staffView').hidden && renderThread.read !== key) { renderThread.read = key; api('/api/wa/read', { phone: c.phone }); }
+  if (!$('canned').childElementCount) $('canned').innerHTML = CANNED.map(x => `<button type="button" class="chip">${esc(x)}</button>`).join('');
+  if (c.unread && role === 'staff' && tab() === 'whatsapp' && renderThread.read !== key) { renderThread.read = key; api('/api/wa/read', { phone: c.phone }); }
+}
+function renderWaToday() {
+  const t = todaysBookings();
+  $('waTodayN').textContent = t.length ? String(t.length) : '';
+  $('waToday').innerHTML = t.length ? t.map(({ h, b }) => `<div class="row hit ${isPast('today', h) ? 'done' : ''}" data-open="today|${h}"><div class="t">${hShort(h)}</div>
+      <div class="grow">${esc(b.customer)}<div class="m">${chMark(b.channel)}${SRC_LABEL(b.channel)}</div></div>
+      ${(b.status || 'booked') === 'booked' ? checkBtn(b, h) : stChip(b, 'today', h)}</div>`).join('')
+    : '<div class="empty">No bookings today yet.</div>';
 }
 $('inbox').onclick = e => { const r = e.target.closest('[data-p]'); if (r) { staffChat = r.dataset.p; threadKey = null; renderInbox(); } };
 $('inboxTabs').onclick = e => { const b = e.target.closest('button'); if (b) { inboxTab = b.dataset.t; renderInbox(); } };
-$('canned').onclick = e => { if (e.target.classList.contains('chip')) { $('replyInput').value = e.target.textContent; $('replyInput').focus(); } };
+$('canned').onclick = e => { const c = e.target.closest('.chip'); if (c) { $('replyInput').value = c.textContent; $('replyInput').focus(); } };
 $('replyForm').onsubmit = e => { e.preventDefault(); const text = $('replyInput').value.trim(); if (!text || !staffChat) return; api('/api/wa/reply', { phone: staffChat, text }); $('replyInput').value = ''; };
-$('thead').addEventListener('change', e => { if (e.target.id === 'botSw') api('/api/wa/takeover', { phone: staffChat, on: !e.target.checked }); });
-$('thead').addEventListener('click', e => { if (e.target.id === 'resolveBtn') api('/api/wa/resolve', { phone: staffChat }); });
+$('thead').addEventListener('click', e => {
+  if (e.target.closest('#botSw')) { const c = S.chats.find(x => x.phone === staffChat); if (c) api('/api/wa/takeover', { phone: staffChat, on: !c.human }); }
+  if (e.target.closest('#resolveBtn')) api('/api/wa/resolve', { phone: staffChat }).then(() => toast('Marked done'));
+});
 
+// ───────── Timers ─────────
+// Hold countdowns tick every second (only the m:ss text, so nothing jumps); the full view refreshes every 30s.
+setInterval(() => {
+  if (!S || role !== 'staff') return;
+  if (document.querySelector('#staffView [data-hold]')) { renderDesk(); renderCalendar(); }
+  if (bkOpen && S.slots[bkOpen.d][bkOpen.h].hold) renderBooking();
+}, 1000);
+setInterval(() => { if (S && role === 'staff') renderStaff(); }, 30000); // keep "in N min", the now row and past folding fresh

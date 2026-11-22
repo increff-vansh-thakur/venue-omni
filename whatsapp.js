@@ -18,7 +18,7 @@ exports.start = async function start({ onStatus, onMessage, setSender }) {
     let version; try { ({ version } = await fetchLatestBaileysVersion()); } catch {}
     const sock = makeWASocket({
       auth: state, version, logger: pino({ level: 'silent' }), markOnlineOnConnect: false,
-      browser: Browsers?.macOS ? Browsers.macOS('TurfOS') : ['TurfOS', 'Chrome', '1.0'],
+      browser: Browsers?.macOS ? Browsers.macOS('VenueBuddy') : ['VenueBuddy', 'Chrome', '1.0'],
     });
     sock.ev.on('creds.update', saveCreds);
     sock.ev.on('connection.update', u => {

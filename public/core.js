@@ -12,7 +12,7 @@ const GLYPH = {
   aggC: '<path fill-rule="evenodd" d="M4 4h6.5a8 8 0 0 1 0 16H4zm3.2 3.2v9.6h3.3a4.8 4.8 0 0 0 0-9.6z"/><circle cx="20" cy="5" r="2.2"/>',
   offline: '<path d="M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 10c4.4 0 8 2 8 4.6V21H4v-3.4C4 15 7.6 13 12 13z"/>',
 };
-const logo = (id, s = 20) => { const c = E.ch(id); return `<span class="logo" style="width:${s}px;height:${s}px;background:${c.color}" title="${c.name}"><svg viewBox="0 0 24 24">${GLYPH[id] || ''}</svg></span>`; };
+const logo = (id, s = 20) => { const c = E.ch(id); return `<span class="logo" style="width:${s}px;height:${s}px;background:var(--c-${id}, ${c.color})" title="${c.name}"><svg viewBox="0 0 24 24">${GLYPH[id] || ''}</svg></span>`; };
 const MK_NAMES = E.MARKETPLACES.map(E.chName);
 const listNames = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a[0];
 const I = {
