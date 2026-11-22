@@ -34,3 +34,9 @@ WHATSAPP=1 SARVAM_API_KEY=your_key npm start
 - `/mcp` — MCP endpoint
 
 Requirements and design notes are in [`docs/`](docs/).
+
+## Deploy (Render)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/increff-vansh-thakur/venue-omni)
+
+`render.yaml` sets up a free Node web service. Render asks for `SARVAM_API_KEY` during setup. On the free plan the service sleeps when idle and in-memory bookings reset when it restarts.
